@@ -1,13 +1,35 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import Layout from '@/components/Layout';
+import QuoteDisplay from '@/components/QuoteDisplay';
+import TranslationTool from '@/components/TranslationTool';
+import Quiz from '@/components/Quiz';
+import Glossary from '@/components/Glossary';
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState<'home' | 'translate' | 'quiz' | 'glossary'>('home');
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return <QuoteDisplay />;
+      case 'translate':
+        return <TranslationTool />;
+      case 'quiz':
+        return <Quiz />;
+      case 'glossary':
+        return <Glossary />;
+      default:
+        return <QuoteDisplay />;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      <div className="animate-fade-in">
+        {renderContent()}
       </div>
-    </div>
+    </Layout>
   );
 };
 
