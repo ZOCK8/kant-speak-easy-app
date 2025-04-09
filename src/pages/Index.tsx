@@ -5,9 +5,10 @@ import AvatarPanel from '@/components/AvatarPanel';
 import QuestsPanel from '@/components/QuestsPanel';
 import GamePanel from '@/components/GamePanel';
 import ShopPanel from '@/components/ShopPanel';
+import InventoryPanel from '@/components/InventoryPanel';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<'avatar' | 'quests' | 'game' | 'shop'>('avatar');
+  const [activeTab, setActiveTab] = useState<'avatar' | 'quests' | 'game' | 'shop' | 'inventory'>('avatar');
 
   const renderContent = () => {
     switch (activeTab) {
@@ -19,6 +20,8 @@ const Index = () => {
         return <GamePanel />;
       case 'shop':
         return <ShopPanel />;
+      case 'inventory':
+        return <InventoryPanel />;
       default:
         return <AvatarPanel />;
     }

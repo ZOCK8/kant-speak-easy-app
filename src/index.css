@@ -39,7 +39,8 @@
   }
 
   body {
-    @apply bg-game bg-dots-pattern bg-[size:24px_24px] text-game-foreground font-sans;
+    @apply bg-game bg-moving-dots bg-[size:24px_24px] text-game-foreground font-sans overflow-x-hidden;
+    animation: animateBackground 15s ease infinite;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -63,4 +64,34 @@
   .blue-glow {
     @apply shadow-[0_0_15px_rgba(30,174,219,0.5)];
   }
+}
+
+/* Moving dots background */
+@keyframes moveDots {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+@keyframes animateBackground {
+  0%, 100% {
+    background-size: 32px 32px;
+  }
+  50% {
+    background-size: 36px 36px;
+  }
+}
+
+.bg-moving-dots {
+  background-image: radial-gradient(
+    circle, 
+    rgba(30, 174, 219, 0.4) 1px, 
+    transparent 5px
+  );
+  background-size: 32px 32px;
+  animation: moveDots 20s linear infinite;
+  backdrop-filter: blur(1px);
 }
