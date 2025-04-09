@@ -4,9 +4,18 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Clock, Check, AlertTriangle, Coins, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import QuestEditor from './QuestEditor';
+import RewardPanel from './RewardPanel';
 
 const QuestsPanel: React.FC = () => {
   const { toast } = useToast();
+  
+  // Quest editor state
+  const [editingQuest, setEditingQuest] = useState<number | null>(null);
+  
+  // Reward panel state
+  const [showReward, setShowReward] = useState(false);
+  const [completedQuest, setCompletedQuest] = useState<typeof quests[0] | null>(null);
   
   // Mock Quests with rewards for character development
   const [quests, setQuests] = useState([
@@ -64,19 +73,57 @@ const QuestsPanel: React.FC = () => {
     },
   ]);
   
-  // Complete a quest
-  const completeQuest = (id: number) => {
+  // Open quest editor
+  const openQuestEditor = (id: number) => {
+    setEditingQuest(id);
+  };
+  
+  // Close quest editor
+  const closeQuestEditor = () => {
+    setEditingQuest(null);
+  };
+  
+  // Update quest progress
+  const updateQuestProgress = (id: number, newProgress: number) => {
     setQuests(quests.map(quest => {
-      if (quest.id === id && quest.progress >= quest.total) {
+      if (quest.id === id) {
         toast({
-          title: "Quest abgeschlossen!",
-          description: `Du hast "${quest.title}" abgeschlossen und Belohnungen erhalten.`,
+          description: `${quest.title}: Fortschritt auf ${newProgress}/${quest.total} aktualisiert`,
           variant: "default",
         });
-        return { ...quest, status: "completed" };
+        return { ...quest, progress: newProgress };
       }
       return quest;
     }));
+  };
+  
+  // Complete a quest and show rewards
+  const completeQuest = (id: number) => {
+    const quest = quests.find(q => q.id === id);
+    
+    if (quest && quest.progress >= quest.total) {
+      setCompletedQuest(quest);
+      setShowReward(true);
+      
+      setQuests(quests.map(q => {
+        if (q.id === id) {
+          return { ...q, status: "completed" };
+        }
+        return q;
+      }));
+    }
+  };
+  
+  // Close reward panel
+  const closeRewardPanel = () => {
+    setShowReward(false);
+    setCompletedQuest(null);
+    
+    toast({
+      title: "Quest abgeschlossen!",
+      description: "Belohnungen wurden deinem Konto gutgeschrieben.",
+      variant: "default",
+    });
   };
   
   // Simulate progress for a quest (for demo purposes)
@@ -96,6 +143,9 @@ const QuestsPanel: React.FC = () => {
     }));
   };
   
+  // Find the currently editing quest
+  const currentEditingQuest = quests.find(q => q.id === editingQuest);
+  
   const renderQuestCard = (quest: typeof quests[0]) => {
     const isCompleted = quest.status === "completed";
     const isLocked = quest.status === "locked";
@@ -104,7 +154,8 @@ const QuestsPanel: React.FC = () => {
     return (
       <Card 
         key={quest.id} 
-        className={`game-card p-4 mb-4 ${isCompleted ? 'border-green-500/30' : isLocked ? 'opacity-60' : ''}`}
+        className={`game-card p-4 mb-4 ${isCompleted ? 'border-green-500/30' : isLocked ? 'opacity-60' : ''} cursor-pointer hover:border-game-accent/50 transition-colors`}
+        onClick={() => !isLocked && openQuestEditor(quest.id)}
       >
         <div className="flex justify-between items-start mb-3">
           <h3 className={`text-lg font-medium ${isCompleted ? 'text-green-400' : 'text-game-accent'}`}>
@@ -161,7 +212,10 @@ const QuestsPanel: React.FC = () => {
                   size="sm" 
                   variant="outline"
                   className="text-game-foreground/70 border-game-foreground/20 hover:bg-game-secondary text-xs"
-                  onClick={() => progressQuest(quest.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    progressQuest(quest.id);
+                  }}
                 >
                   Fortschritt
                 </Button>
@@ -170,7 +224,10 @@ const QuestsPanel: React.FC = () => {
                   <Button 
                     size="sm" 
                     className="bg-game-accent hover:bg-game-accent/80 text-xs"
-                    onClick={() => completeQuest(quest.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      completeQuest(quest.id);
+                    }}
                   >
                     Abschließen
                   </Button>
@@ -218,6 +275,27 @@ const QuestsPanel: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Quest Editor Dialog */}
+      {currentEditingQuest && (
+        <QuestEditor
+          isOpen={editingQuest !== null}
+          onClose={closeQuestEditor}
+          quest={currentEditingQuest}
+          onUpdate={updateQuestProgress}
+          onComplete={completeQuest}
+        />
+      )}
+      
+      {/* Reward Panel Dialog */}
+      {completedQuest && (
+        <RewardPanel
+          isOpen={showReward}
+          onClose={closeRewardPanel}
+          questTitle={completedQuest.title}
+          reward={completedQuest.reward}
+        />
+      )}
     </div>
   );
 };
