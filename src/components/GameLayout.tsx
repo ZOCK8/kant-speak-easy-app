@@ -1,11 +1,12 @@
 
-import React from 'react';
-import { Shield, Sword, Package, Trophy, User, Activity, Home, Menu, X, Backpack } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Sword, Package, Trophy, User, Activity, Home, Menu, X, Backpack, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface GameLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = React.useState(!isMobile);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
   
   const navItems = [
     { id: 'avatar', label: 'Avatar', icon: User },
@@ -33,10 +35,10 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   const playerData = {
     name: "Spieler123",
     level: 5,
-    health: 85,
+    health: 0,
     strength: 12,
     defense: 8,
-    experience: 3240,
+    experience: 0,
     nextLevel: 5000
   };
 
@@ -77,12 +79,22 @@ const GameLayout: React.FC<GameLayoutProps> = ({
       <>
         <div className="flex flex-col items-center mb-6">
           <Avatar className="h-24 w-24 mb-4 blue-glow">
-            <AvatarImage src="/placeholder.svg" alt="Avatar" />
+            <AvatarImage src="/lovable-uploads/27914368-3994-4663-b43b-c03a32267fd6.png" alt="Avatar" />
             <AvatarFallback className="bg-game-accent text-white text-xl">
               {playerData.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
-          <h2 className="text-game-accent text-lg font-bold">{playerData.name}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-game-accent text-lg font-bold">{playerData.name}</h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 text-game-accent/70 hover:text-game-accent"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
           <p className="text-game-foreground/70 text-sm">Krieger • Level {playerData.level}</p>
         </div>
         
@@ -131,7 +143,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-game bg-moving-dots bg-[size:32px_32px]">
+    <div className="min-h-screen flex flex-col bg-game bg-moving-dots bg-[size:64px_64px]">
       <header className="bg-game-secondary border-b border-game-accent/30 p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -214,6 +226,34 @@ const GameLayout: React.FC<GameLayoutProps> = ({
           </div>
         </main>
       </div>
+      
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-game-accent">Einstellungen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between">
+              <label className="text-game-foreground/70">Schwierigkeitsgrad</label>
+              <select className="bg-game-secondary border border-game-accent/30 rounded p-1 text-game-foreground">
+                <option value="easy">Einfach</option>
+                <option value="medium">Mittel</option>
+                <option value="hard">Schwer</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="text-game-foreground/70">Audioeffekte</label>
+              <input type="checkbox" className="toggle" defaultChecked />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setSettingsOpen(false)}>
+              Schließen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Mobile Navigation */}
       {isMobile && renderMobileNav()}

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, Trophy, Star, UserPlus, Shield, Sword, Zap } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const AvatarPanel: React.FC = () => {
   // Character stats
@@ -21,6 +22,8 @@ const AvatarPanel: React.FC = () => {
     { id: 2, title: "Sammler", description: "Sammle 5 verschiedene Gegenstände", completed: true },
     { id: 3, title: "Meister", description: "Erreiche Level 10", completed: false },
     { id: 4, title: "Schatzsucher", description: "Öffne 10 Lootboxen", completed: false },
+    { id: 5, title: "Fitness Anfänger", description: "Schließe 3 Fitness-Quests ab", completed: false },
+    { id: 6, title: "Marathon-Läufer", description: "Laufe insgesamt 42 km", completed: false },
   ];
 
   // Increase a stat if points are available
@@ -40,6 +43,36 @@ const AvatarPanel: React.FC = () => {
         <h2 className="text-2xl font-bold text-game-accent mb-2">Dein Profil</h2>
         <p className="text-game-foreground/70">Passe deinen Charakter an und siehe deine Erfolge</p>
       </div>
+      
+      {/* Player Avatar Display */}
+      <Card className="game-card p-6 flex flex-col items-center mb-8">
+        <h3 className="text-game-accent mb-6 text-xl">Dein Avatar</h3>
+        <div className="relative mb-6">
+          <div className="w-48 h-48 relative">
+            <img 
+              src="/lovable-uploads/27914368-3994-4663-b43b-c03a32267fd6.png" 
+              alt="Player Avatar" 
+              className="w-full h-full object-contain blue-glow-soft"
+            />
+          </div>
+        </div>
+        <h4 className="text-lg font-medium text-game-foreground mb-2">Spieler123</h4>
+        <p className="text-sm text-game-foreground/70 mb-4">Level 5 Krieger</p>
+        <div className="flex space-x-3">
+          <div className="flex items-center text-sm">
+            <Sword className="h-4 w-4 text-red-400 mr-1" />
+            <span className="text-game-foreground/70">STR: {stats.strength}</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <Shield className="h-4 w-4 text-blue-400 mr-1" />
+            <span className="text-game-foreground/70">DEF: {stats.defense}</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <Zap className="h-4 w-4 text-yellow-400 mr-1" />
+            <span className="text-game-foreground/70">AGI: {stats.agility}</span>
+          </div>
+        </div>
+      </Card>
       
       <Card className="game-card flex flex-col items-center p-6 mb-8">
         <h3 className="text-game-accent mb-4 flex items-center">

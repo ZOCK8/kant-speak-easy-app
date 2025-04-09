@@ -17,55 +17,110 @@ const QuestsPanel: React.FC = () => {
   const [showReward, setShowReward] = useState(false);
   const [completedQuest, setCompletedQuest] = useState<typeof quests[0] | null>(null);
   
-  // Mock Quests with rewards for character development
+  // Difficulty levels
+  const [difficultyLevel, setDifficultyLevel] = useState<'easy' | 'medium' | 'hard'>('easy');
+  
+  // Get difficulty multiplier
+  const getDifficultyMultiplier = () => {
+    switch (difficultyLevel) {
+      case 'easy': return 1;
+      case 'medium': return 2;
+      case 'hard': return 3;
+      default: return 1;
+    }
+  };
+  
+  // Mock Quests with fitness challenges
   const [quests, setQuests] = useState([
     { 
       id: 1, 
-      title: "Monster-Jäger", 
-      description: "Besiege 5 Monster im Kampf", 
+      title: "Liegestütze", 
+      description: `Mache ${20 * getDifficultyMultiplier()} Liegestütze für bessere Kraft`, 
       reward: { 
         xp: 100, 
         gold: 50,
         statPoints: 1
       }, 
-      progress: 3, 
-      total: 5, 
+      progress: 0, 
+      total: 20 * getDifficultyMultiplier(), 
       status: "active" 
     },
     { 
       id: 2, 
-      title: "Schatzkammer", 
-      description: "Finde und öffne 3 Schatzkisten", 
+      title: "Kniebeugen", 
+      description: `Mache ${20 * getDifficultyMultiplier()} Kniebeugen für mehr Ausdauer`, 
       reward: { 
-        xp: 200, 
-        gold: 100,
+        xp: 150, 
+        gold: 75,
         statPoints: 1
       }, 
-      progress: 1, 
-      total: 3, 
+      progress: 0, 
+      total: 20 * getDifficultyMultiplier(), 
       status: "active" 
     },
     { 
       id: 3, 
-      title: "Bergtroll", 
-      description: "Besiege den Bergtroll", 
+      title: "Sit-Ups", 
+      description: `Mache ${20 * getDifficultyMultiplier()} Sit-Ups für einen starken Core`, 
       reward: { 
-        xp: 500, 
-        gold: 300,
-        statPoints: 2,
-        item: "Trollhammer"
+        xp: 120, 
+        gold: 60,
+        statPoints: 1,
+        item: "Bauchmuskel-Verstärker"
       }, 
       progress: 0, 
-      total: 1, 
-      status: "locked" 
+      total: 20 * getDifficultyMultiplier(), 
+      status: "active" 
     },
     { 
       id: 4, 
-      title: "Erste Schritte", 
-      description: "Schließe das Tutorial ab", 
+      title: "Laufen", 
+      description: `Laufe ${2500 * getDifficultyMultiplier()} Meter für Ausdauer`, 
+      reward: { 
+        xp: 200,
+        gold: 100,
+        statPoints: 2,
+        item: "Laufschuhe +1"
+      }, 
+      progress: 0, 
+      total: 2500 * getDifficultyMultiplier(), 
+      status: "active" 
+    },
+    { 
+      id: 5, 
+      title: "Schlaf", 
+      description: `Schlafe ${8 * getDifficultyMultiplier()} Stunden für Regeneration`, 
+      reward: { 
+        xp: 80,
+        gold: 40,
+        statPoints: 1,
+        item: "Regenerationstrank"
+      }, 
+      progress: 0, 
+      total: 8 * getDifficultyMultiplier(), 
+      status: "active" 
+    },
+    { 
+      id: 6, 
+      title: "Halbmarathon", 
+      description: "Laufe einen Halbmarathon (21 km)", 
+      reward: { 
+        xp: 500, 
+        gold: 300,
+        statPoints: 3,
+        item: "Legendäre Laufschuhe"
+      }, 
+      progress: 0, 
+      total: 21000, 
+      status: "locked" 
+    },
+    { 
+      id: 7, 
+      title: "Erste Übung", 
+      description: "Schließe deine erste Fitnessübung ab", 
       reward: { 
         xp: 50,
-        statPoints: 0
+        statPoints: 1
       }, 
       progress: 1, 
       total: 1, 
@@ -145,6 +200,31 @@ const QuestsPanel: React.FC = () => {
   
   // Find the currently editing quest
   const currentEditingQuest = quests.find(q => q.id === editingQuest);
+  
+  // Change difficulty level
+  const changeDifficulty = (level: 'easy' | 'medium' | 'hard') => {
+    setDifficultyLevel(level);
+    
+    // Update quest totals based on new difficulty
+    setQuests(quests.map(quest => {
+      if (quest.id <= 5) { // Only affect the first 5 exercise quests
+        const baseAmount = quest.id === 4 ? 2500 : quest.id === 5 ? 8 : 20;
+        const newTotal = baseAmount * (level === 'easy' ? 1 : level === 'medium' ? 2 : 3);
+        
+        return {
+          ...quest,
+          description: quest.description.replace(/\d+/, newTotal.toString()),
+          total: newTotal
+        };
+      }
+      return quest;
+    }));
+    
+    toast({
+      description: `Schwierigkeitsgrad auf ${level === 'easy' ? 'Einfach' : level === 'medium' ? 'Mittel' : 'Schwer'} gesetzt`,
+      variant: "default",
+    });
+  };
   
   const renderQuestCard = (quest: typeof quests[0]) => {
     const isCompleted = quest.status === "completed";
@@ -243,8 +323,39 @@ const QuestsPanel: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-game-accent mb-2">Quests</h2>
-        <p className="text-game-foreground/70">Schließe Quests ab, um Belohnungen zu erhalten</p>
+        <h2 className="text-2xl font-bold text-game-accent mb-2">Fitness Quests</h2>
+        <p className="text-game-foreground/70">Schließe Übungen ab, um Belohnungen zu erhalten</p>
+      </div>
+      
+      {/* Difficulty selector */}
+      <div className="mb-6 game-card p-4">
+        <h3 className="text-game-accent mb-3">Schwierigkeitsgrad</h3>
+        <div className="flex space-x-2">
+          <Button 
+            variant={difficultyLevel === 'easy' ? 'default' : 'outline'}
+            className={difficultyLevel === 'easy' ? 'bg-game-accent' : 'border-game-accent/30 text-game-foreground/70'}
+            onClick={() => changeDifficulty('easy')}
+            size="sm"
+          >
+            Einfach
+          </Button>
+          <Button 
+            variant={difficultyLevel === 'medium' ? 'default' : 'outline'}
+            className={difficultyLevel === 'medium' ? 'bg-game-accent' : 'border-game-accent/30 text-game-foreground/70'}
+            onClick={() => changeDifficulty('medium')}
+            size="sm"
+          >
+            Mittel
+          </Button>
+          <Button 
+            variant={difficultyLevel === 'hard' ? 'default' : 'outline'}
+            className={difficultyLevel === 'hard' ? 'bg-game-accent' : 'border-game-accent/30 text-game-foreground/70'}
+            onClick={() => changeDifficulty('hard')}
+            size="sm"
+          >
+            Schwer
+          </Button>
+        </div>
       </div>
       
       <div className="space-y-6">

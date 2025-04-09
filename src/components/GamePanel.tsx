@@ -1,10 +1,43 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sword, Shield, Activity } from 'lucide-react';
+import { Sword, Shield, Activity, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const GamePanel = () => {
+  const { toast } = useToast();
+  const [showBattleDialog, setShowBattleDialog] = useState(false);
+  
+  // Battle statistics
+  const stats = {
+    victories: 24,
+    defeats: 8,
+    winRate: '75%',
+    kills: 42,
+    highestDamage: 87
+  };
+  
+  // Current opponent
+  const opponent = {
+    name: 'Bergtroll',
+    health: 100,
+    maxHealth: 100,
+    attack: 15,
+    defense: 10
+  };
+  
+  // Handle battle start
+  const handleBattleStart = () => {
+    toast({
+      title: "Kampf nicht verfügbar",
+      description: "Kampfmodus wird aktuell überarbeitet und ist bald verfügbar!",
+      variant: "destructive",
+    });
+    setShowBattleDialog(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -19,11 +52,11 @@ const GamePanel = () => {
             <div className="w-32 h-32 rounded-full bg-game/50 flex items-center justify-center border-2 border-game-accent/30">
               <Sword className="h-16 w-16 text-game-accent" />
             </div>
-            <h4 className="text-lg font-medium text-game-foreground">Bergtroll</h4>
+            <h4 className="text-lg font-medium text-game-foreground">{opponent.name}</h4>
             <div className="w-full space-y-2">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-game-foreground/70">HP</span>
-                <span>100/100</span>
+                <span>{opponent.health}/{opponent.maxHealth}</span>
               </div>
               <div className="w-full bg-game/50 rounded-full h-2">
                 <div className="bg-red-500 h-2 rounded-full w-full"></div>
@@ -31,11 +64,11 @@ const GamePanel = () => {
               <div className="flex justify-between text-sm">
                 <div className="flex items-center">
                   <Sword className="h-4 w-4 text-game-accent mr-1" />
-                  <span className="text-game-foreground/70">ATK: 15</span>
+                  <span className="text-game-foreground/70">ATK: {opponent.attack}</span>
                 </div>
                 <div className="flex items-center">
                   <Shield className="h-4 w-4 text-game-accent mr-1" />
-                  <span className="text-game-foreground/70">DEF: 10</span>
+                  <span className="text-game-foreground/70">DEF: {opponent.defense}</span>
                 </div>
               </div>
             </div>
@@ -47,34 +80,66 @@ const GamePanel = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-game-foreground/70">Siege</span>
-              <span className="text-game-highlight">24</span>
+              <span className="text-game-highlight">{stats.victories}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-game-foreground/70">Niederlagen</span>
-              <span className="text-game-foreground">8</span>
+              <span className="text-game-foreground">{stats.defeats}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-game-foreground/70">Siegesrate</span>
-              <span className="text-green-400">75%</span>
+              <span className="text-green-400">{stats.winRate}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-game-foreground/70">Tötungen</span>
-              <span className="text-game-highlight">42</span>
+              <span className="text-game-highlight">{stats.kills}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-game-foreground/70">Höchster Schaden</span>
-              <span className="text-red-400">87</span>
+              <span className="text-red-400">{stats.highestDamage}</span>
             </div>
           </div>
         </Card>
       </div>
       
       <div className="flex justify-center mt-8">
-        <Button className="game-button flex items-center space-x-2 py-6 px-8 text-lg">
+        <Button className="game-button flex items-center space-x-2 py-6 px-8 text-lg" onClick={handleBattleStart}>
           <Sword className="h-6 w-6" />
           <span>Kampf beginnen</span>
         </Button>
       </div>
+      
+      {/* Battle Dialog */}
+      <Dialog open={showBattleDialog} onOpenChange={setShowBattleDialog}>
+        <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-yellow-500">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Kampfmodus nicht verfügbar
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-game-foreground/80">
+              Der Kampfmodus wird gerade überarbeitet und ist bald verfügbar.
+              Führe stattdessen Quests aus, um Erfahrung und Belohnungen zu sammeln!
+            </p>
+            <div className="mt-4 p-4 border border-game-accent/20 rounded-md bg-game/30">
+              <h4 className="text-game-accent mb-2">Kommende Funktionen:</h4>
+              <ul className="space-y-1 text-sm text-game-foreground/70">
+                <li>• Verschiedene Monster mit unterschiedlichen Schwierigkeitsgraden</li>
+                <li>• Komplexes Kampfsystem mit Spezialangriffen</li>
+                <li>• Spezielle Kampfbelohnungen und Trophäen</li>
+                <li>• Rang- und Levelaufstiegssystem</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowBattleDialog(false)}>
+              Verstanden
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
