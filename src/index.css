@@ -7,64 +7,60 @@
 
 @layer base {
   :root {
-    --background: 220 33% 98%;
-    --foreground: 220 45% 15%;
+    --background: 220 33% 8%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 33% 12%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 33% 12%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 221 83% 25%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 70% 50%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 70% 70%;
+    --secondary-foreground: 220 33% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 33% 15%;
+    --muted-foreground: 220 10% 70%;
 
-    --accent: 45 70% 50%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 100% 60%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 25%;
+    --border: 220 33% 15%;
+    --input: 220 33% 15%;
+    --ring: 210 100% 50%;
 
     --radius: 0.5rem;
   }
 
   body {
-    @apply bg-kant-paper bg-paper-texture text-kant-secondary font-sans;
+    @apply bg-game bg-dots-pattern bg-[size:24px_24px] text-game-foreground font-sans;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif text-kant;
+    @apply font-sans text-game-accent;
   }
 }
 
 @layer components {
-  .kant-quote {
-    @apply italic text-kant font-serif leading-relaxed;
+  .game-card {
+    @apply bg-game-secondary border border-game-accent/30 rounded-md shadow-md p-4 hover:shadow-lg transition-shadow;
   }
   
-  .kant-card {
-    @apply bg-white border border-gray-200 rounded-md shadow-sm p-6 hover:shadow-md transition-shadow;
+  .game-button {
+    @apply bg-game-accent text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition-colors;
   }
   
-  .kant-button {
-    @apply bg-kant text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition-colors;
+  .game-button-secondary {
+    @apply bg-game-secondary text-game-accent border border-game-accent px-4 py-2 rounded-md hover:bg-game-accent/10 transition-colors;
   }
   
-  .kant-button-secondary {
-    @apply bg-kant-accent text-black px-4 py-2 rounded-md hover:bg-opacity-90 transition-colors;
-  }
-  
-  .kant-ornament {
-    @apply mx-auto my-4 text-kant-accent opacity-50 h-6;
+  .blue-glow {
+    @apply shadow-[0_0_15px_rgba(30,174,219,0.5)];
   }
 }

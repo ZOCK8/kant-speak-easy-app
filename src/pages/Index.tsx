@@ -1,35 +1,35 @@
 
 import React, { useState } from 'react';
-import Layout from '@/components/Layout';
-import QuoteDisplay from '@/components/QuoteDisplay';
-import TranslationTool from '@/components/TranslationTool';
-import Quiz from '@/components/Quiz';
-import Glossary from '@/components/Glossary';
+import GameLayout from '@/components/GameLayout';
+import AvatarPanel from '@/components/AvatarPanel';
+import QuestsPanel from '@/components/QuestsPanel';
+import GamePanel from '@/components/GamePanel';
+import ShopPanel from '@/components/ShopPanel';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<'home' | 'translate' | 'quiz' | 'glossary'>('home');
+  const [activeTab, setActiveTab] = useState<'avatar' | 'quests' | 'game' | 'shop'>('avatar');
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'home':
-        return <QuoteDisplay />;
-      case 'translate':
-        return <TranslationTool />;
-      case 'quiz':
-        return <Quiz />;
-      case 'glossary':
-        return <Glossary />;
+      case 'avatar':
+        return <AvatarPanel />;
+      case 'quests':
+        return <QuestsPanel />;
+      case 'game':
+        return <GamePanel />;
+      case 'shop':
+        return <ShopPanel />;
       default:
-        return <QuoteDisplay />;
+        return <AvatarPanel />;
     }
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+    <GameLayout activeTab={activeTab} setActiveTab={setActiveTab}>
       <div className="animate-fade-in">
         {renderContent()}
       </div>
-    </Layout>
+    </GameLayout>
   );
 };
 
