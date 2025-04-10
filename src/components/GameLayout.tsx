@@ -114,8 +114,8 @@ const GameLayout: React.FC<GameLayoutProps> = ({
     return (
       <>
         <div className="flex flex-col items-center mb-6">
-          <Avatar className="h-24 w-24 mb-4 blue-glow">
-            <AvatarImage src={getAvatarImage()} alt="Avatar" className="filter blur-[0.5px]" />
+          <Avatar className="h-24 w-24 mb-4">
+            <AvatarImage src={getAvatarImage()} alt="Avatar" />
             <AvatarFallback className="bg-game-accent text-white text-xl">
               {playerName.charAt(0)}
             </AvatarFallback>
@@ -179,14 +179,14 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-game bg-moving-dots bg-[size:100px_100px] filter blur-[0.5px]">
+    <div className="min-h-screen flex flex-col bg-game">
       <header className="bg-game-secondary border-b border-game-accent/30 p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/859298bb-719b-490c-984a-5dcd22010bee.png"
               alt="Game Logo"
-              className="h-6 w-6 blue-glow" 
+              className="h-6 w-6" 
             />
             <h1 className="text-xl md:text-2xl font-bold text-game-accent">Monster Battle</h1>
           </div>

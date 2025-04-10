@@ -4,8 +4,12 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, Trophy, Star, UserPlus, Shield, Sword, Zap } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useGameContext } from '@/context/GameContext';
 
 const AvatarPanel: React.FC = () => {
+  // Access game context for player info
+  const { playerName, selectedAvatar } = useGameContext();
+
   // Character stats
   const [stats, setStats] = useState({
     strength: 12,
@@ -25,6 +29,22 @@ const AvatarPanel: React.FC = () => {
     { id: 5, title: "Fitness Anfänger", description: "Schließe 3 Fitness-Quests ab", completed: false },
     { id: 6, title: "Marathon-Läufer", description: "Laufe insgesamt 42 km", completed: false },
   ];
+
+  // Get the correct avatar image based on selection
+  const getAvatarImage = () => {
+    switch(selectedAvatar) {
+      case 'player1':
+        return "/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png";
+      case 'player2':
+        return "/lovable-uploads/e6bb07f6-039d-4ed3-bece-ad8d405fcea4.png";
+      case 'player3':
+        return "/lovable-uploads/78ff7be8-098a-4011-b094-98ab0dc84162.png";
+      case 'monster':
+        return "/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png";
+      default:
+        return "/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png";
+    }
+  };
 
   // Increase a stat if points are available
   const increaseStat = (stat: keyof typeof stats) => {
@@ -50,13 +70,13 @@ const AvatarPanel: React.FC = () => {
         <div className="relative mb-6">
           <div className="w-48 h-48 relative">
             <img 
-              src="/lovable-uploads/27914368-3994-4663-b43b-c03a32267fd6.png" 
+              src={getAvatarImage()} 
               alt="Player Avatar" 
               className="w-full h-full object-contain blue-glow-soft"
             />
           </div>
         </div>
-        <h4 className="text-lg font-medium text-game-foreground mb-2">Spieler123</h4>
+        <h4 className="text-lg font-medium text-game-foreground mb-2">{playerName}</h4>
         <p className="text-sm text-game-foreground/70 mb-4">Level 5 Krieger</p>
         <div className="flex space-x-3">
           <div className="flex items-center text-sm">

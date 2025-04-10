@@ -129,9 +129,7 @@
     hsl(var(--game-accent) / 0.3) 2px,
     transparent 2px
   );
-  animation: moveBackground 30s linear infinite;
   background-size: 120px 120px;
-  filter: blur(1.5px);
   position: relative;
 }
 
@@ -147,7 +145,6 @@
     transparent 1px
   );
   background-size: 80px 80px;
-  animation: moveBackground 20s linear infinite reverse;
   z-index: -1;
 }
 

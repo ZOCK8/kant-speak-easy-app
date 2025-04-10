@@ -25,7 +25,7 @@ const WelcomeSetup: React.FC = () => {
             <img 
               src="/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png" 
               alt="Player Avatar" 
-              className="w-full h-full object-contain blue-glow-soft"
+              className="w-full h-full object-contain"
             />
           </div>
           <p className="text-game-foreground/80">
@@ -203,7 +203,7 @@ const WelcomeSetup: React.FC = () => {
   const currentStepData = steps[currentStep];
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <Card className="max-w-md w-full bg-game border border-game-accent/30 text-game-foreground p-0 overflow-hidden">
         <div className="bg-game-secondary p-4 border-b border-game-accent/30">
           <h2 className="text-xl font-bold text-game-accent">{currentStepData.title}</h2>
