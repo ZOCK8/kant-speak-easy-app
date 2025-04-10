@@ -6,9 +6,12 @@ import QuestsPanel from '@/components/QuestsPanel';
 import GamePanel from '@/components/GamePanel';
 import ShopPanel from '@/components/ShopPanel';
 import InventoryPanel from '@/components/InventoryPanel';
+import WelcomeSetup from '@/components/WelcomeSetup';
+import { useGameContext } from '@/context/GameContext';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<'avatar' | 'quests' | 'game' | 'shop' | 'inventory'>('avatar');
+  const { isFirstTime, showTutorial } = useGameContext();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -28,11 +31,15 @@ const Index = () => {
   };
 
   return (
-    <GameLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-      <div className="animate-fade-in">
-        {renderContent()}
-      </div>
-    </GameLayout>
+    <>
+      {(isFirstTime || showTutorial) && <WelcomeSetup />}
+      
+      <GameLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+        <div className="animate-fade-in">
+          {renderContent()}
+        </div>
+      </GameLayout>
+    </>
   );
 };
 

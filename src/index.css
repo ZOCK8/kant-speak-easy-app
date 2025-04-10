@@ -84,6 +84,7 @@
   }
 }
 
+/* Game specific styles */
 .bg-game {
   background-color: hsl(var(--game));
 }
@@ -112,22 +113,42 @@
   border-color: hsl(var(--game-accent));
 }
 
+/* Game Card Component */
 .game-card {
   @apply bg-game-secondary/50 border border-game-accent/20 rounded-md p-3;
 }
 
+/* Game Button Component */
 .game-button {
   @apply bg-game-accent hover:bg-game-accent/80 text-white font-medium rounded-md transition-colors;
 }
 
+/* Moving Background Dots */
 .bg-moving-dots {
   background-image: radial-gradient(
-    hsl(var(--game-accent) / 0.4) 1px,
+    hsl(var(--game-accent) / 0.3) 2px,
+    transparent 2px
+  );
+  animation: moveBackground 30s linear infinite;
+  background-size: 120px 120px;
+  filter: blur(1.5px);
+  position: relative;
+}
+
+.bg-moving-dots::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+    hsl(var(--game-accent) / 0.15) 1px,
     transparent 1px
   );
-  animation: moveBackground 20s linear infinite;
   background-size: 80px 80px;
-  filter: blur(1px);
+  animation: moveBackground 20s linear infinite reverse;
+  z-index: -1;
 }
 
 @keyframes moveBackground {
@@ -135,20 +156,26 @@
     background-position: 0 0;
   }
   100% {
-    background-position: 80px 80px;
+    background-position: 120px 120px;
   }
 }
 
+/* Glow Effects */
 .blue-glow {
-  filter: drop-shadow(0 0 10px hsl(var(--game-accent) / 0.5));
+  filter: drop-shadow(0 0 10px hsl(var(--game-accent) / 0.7));
 }
 
 .blue-glow-soft {
-  filter: drop-shadow(0 0 5px hsl(var(--game-accent) / 0.3));
+  filter: drop-shadow(0 0 5px hsl(var(--game-accent) / 0.4));
 }
 
+/* Animation Effects */
 .animate-pulse-light {
   animation: pulse-light 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 @keyframes pulse-light {
@@ -161,4 +188,51 @@
   100% {
     opacity: 0.7;
   }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Blur Filter for UI Elements */
+.ui-blur {
+  backdrop-filter: blur(3px);
+}
+
+/* Custom Checkbox for Settings */
+.toggle {
+  appearance: none;
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: hsl(var(--game));
+  border: 1px solid hsl(var(--game-accent) / 0.3);
+  border-radius: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.toggle:checked {
+  background-color: hsl(var(--game-accent));
+}
+
+.toggle::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.toggle:checked::before {
+  transform: translateX(20px);
 }

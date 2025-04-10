@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Sword, Shield, Activity, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useGameContext } from '@/context/GameContext';
 
 const GamePanel = () => {
   const { toast } = useToast();
+  const { playerName } = useGameContext();
   const [showBattleDialog, setShowBattleDialog] = useState(false);
   
   // Battle statistics
@@ -46,11 +48,15 @@ const GamePanel = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="game-card p-6">
+        <Card className="game-card p-6 filter blur-[0.5px]">
           <h3 className="text-xl font-bold text-game-accent mb-4">Gegner</h3>
           <div className="flex flex-col items-center space-y-4">
             <div className="w-32 h-32 rounded-full bg-game/50 flex items-center justify-center border-2 border-game-accent/30">
-              <Sword className="h-16 w-16 text-game-accent" />
+              <img 
+                src="/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png"
+                alt="Monster"
+                className="h-24 w-24 object-contain blue-glow-soft" 
+              />
             </div>
             <h4 className="text-lg font-medium text-game-foreground">{opponent.name}</h4>
             <div className="w-full space-y-2">
@@ -75,7 +81,7 @@ const GamePanel = () => {
           </div>
         </Card>
         
-        <Card className="game-card p-6">
+        <Card className="game-card p-6 filter blur-[0.5px]">
           <h3 className="text-xl font-bold text-game-accent mb-4">Kampfstatistiken</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -102,11 +108,20 @@ const GamePanel = () => {
         </Card>
       </div>
       
-      <div className="flex justify-center mt-8">
+      <div className="flex flex-col items-center mt-8 space-y-4">
         <Button className="game-button flex items-center space-x-2 py-6 px-8 text-lg" onClick={handleBattleStart}>
           <Sword className="h-6 w-6" />
           <span>Kampf beginnen</span>
         </Button>
+        
+        <div className="flex items-center p-3 bg-game-secondary/70 border border-red-500/30 rounded-md">
+          <img 
+            src="/lovable-uploads/2f3d1c68-a034-40b0-82c7-17885a27e6c9.png"
+            alt="Not Available"
+            className="h-6 w-6 mr-2" 
+          />
+          <span className="text-red-400 text-sm">Kämpfe sind aktuell nicht verfügbar</span>
+        </div>
       </div>
       
       {/* Battle Dialog */}
@@ -114,7 +129,11 @@ const GamePanel = () => {
         <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground">
           <DialogHeader>
             <DialogTitle className="flex items-center text-yellow-500">
-              <AlertTriangle className="h-5 w-5 mr-2" />
+              <img 
+                src="/lovable-uploads/2f3d1c68-a034-40b0-82c7-17885a27e6c9.png"
+                alt="Warning"
+                className="h-6 w-6 mr-2" 
+              />
               Kampfmodus nicht verfügbar
             </DialogTitle>
           </DialogHeader>

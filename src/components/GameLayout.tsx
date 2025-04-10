@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { Shield, Sword, Package, Trophy, User, Activity, Home, Menu, X, Backpack, Settings } from 'lucide-react';
+import { Shield, Sword, Package, Trophy, User, Activity, Menu, X, Backpack, Settings, RefreshCw, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useGameContext } from '@/context/GameContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface GameLayoutProps {
   children: React.ReactNode;
@@ -20,8 +22,13 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   setActiveTab
 }) => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const { playerName, selectedAvatar, resetProgress } = useGameContext();
   const [sidebarOpen, setSidebarOpen] = React.useState(!isMobile);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = React.useState(false);
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
   const navItems = [
     { id: 'avatar', label: 'Avatar', icon: User },
@@ -33,7 +40,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
 
   // Mock Benutzerdaten
   const playerData = {
-    name: "Spieler123",
+    name: playerName,
     level: 5,
     health: 0,
     strength: 12,
@@ -45,6 +52,35 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   // Toggle sidebar
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+  
+  // Handle reset progress
+  const handleResetProgress = () => {
+    resetProgress();
+    setConfirmResetOpen(false);
+    setSettingsOpen(false);
+    
+    toast({
+      title: "Fortschritt zurückgesetzt",
+      description: "Alle deine Spieldaten wurden zurückgesetzt.",
+      variant: "destructive",
+    });
+  };
+  
+  // Get the correct avatar image based on selection
+  const getAvatarImage = () => {
+    switch(selectedAvatar) {
+      case 'player1':
+        return "/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png";
+      case 'player2':
+        return "/lovable-uploads/e6bb07f6-039d-4ed3-bece-ad8d405fcea4.png";
+      case 'player3':
+        return "/lovable-uploads/78ff7be8-098a-4011-b094-98ab0dc84162.png";
+      case 'monster':
+        return "/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png";
+      default:
+        return "/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png";
+    }
   };
 
   // Mobile bottom navigation
@@ -79,13 +115,13 @@ const GameLayout: React.FC<GameLayoutProps> = ({
       <>
         <div className="flex flex-col items-center mb-6">
           <Avatar className="h-24 w-24 mb-4 blue-glow">
-            <AvatarImage src="/lovable-uploads/27914368-3994-4663-b43b-c03a32267fd6.png" alt="Avatar" />
+            <AvatarImage src={getAvatarImage()} alt="Avatar" className="filter blur-[0.5px]" />
             <AvatarFallback className="bg-game-accent text-white text-xl">
-              {playerData.name.charAt(0)}
+              {playerName.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div className="flex items-center justify-center gap-2">
-            <h2 className="text-game-accent text-lg font-bold">{playerData.name}</h2>
+            <h2 className="text-game-accent text-lg font-bold">{playerName}</h2>
             <Button 
               variant="ghost" 
               size="icon" 
@@ -143,11 +179,15 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-game bg-moving-dots bg-[size:64px_64px]">
+    <div className="min-h-screen flex flex-col bg-game bg-moving-dots bg-[size:100px_100px] filter blur-[0.5px]">
       <header className="bg-game-secondary border-b border-game-accent/30 p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Shield className="h-6 w-6 text-game-accent blue-glow" />
+            <img 
+              src="/lovable-uploads/859298bb-719b-490c-984a-5dcd22010bee.png"
+              alt="Game Logo"
+              className="h-6 w-6 blue-glow" 
+            />
             <h1 className="text-xl md:text-2xl font-bold text-game-accent">Monster Battle</h1>
           </div>
           
@@ -231,12 +271,23 @@ const GameLayout: React.FC<GameLayoutProps> = ({
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground">
           <DialogHeader>
-            <DialogTitle className="text-game-accent">Einstellungen</DialogTitle>
+            <DialogTitle className="flex items-center text-game-accent">
+              <img 
+                src="/lovable-uploads/39e6c163-da14-47d3-a336-0456c3bbc2f2.png"
+                alt="Settings"
+                className="h-6 w-6 mr-2" 
+              />
+              Einstellungen
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-between">
               <label className="text-game-foreground/70">Schwierigkeitsgrad</label>
-              <select className="bg-game-secondary border border-game-accent/30 rounded p-1 text-game-foreground">
+              <select 
+                className="bg-game-secondary border border-game-accent/30 rounded p-1 text-game-foreground"
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+              >
                 <option value="easy">Einfach</option>
                 <option value="medium">Mittel</option>
                 <option value="hard">Schwer</option>
@@ -244,12 +295,60 @@ const GameLayout: React.FC<GameLayoutProps> = ({
             </div>
             <div className="flex items-center justify-between">
               <label className="text-game-foreground/70">Audioeffekte</label>
-              <input type="checkbox" className="toggle" defaultChecked />
+              <input 
+                type="checkbox" 
+                className="toggle" 
+                checked={soundEnabled}
+                onChange={() => setSoundEnabled(!soundEnabled)}
+              />
+            </div>
+            <div className="pt-4 border-t border-game-accent/20">
+              <Button 
+                variant="destructive" 
+                className="w-full flex items-center justify-center"
+                onClick={() => setConfirmResetOpen(true)}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Fortschritt zurücksetzen
+              </Button>
             </div>
           </div>
           <DialogFooter>
             <Button onClick={() => setSettingsOpen(false)}>
               Schließen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Reset Dialog */}
+      <Dialog open={confirmResetOpen} onOpenChange={setConfirmResetOpen}>
+        <DialogContent className="bg-game-secondary border-red-500/40 text-game-foreground">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-500">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Fortschritt zurücksetzen?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-game-foreground/80">
+              Bist du sicher, dass du deinen gesamten Spielfortschritt zurücksetzen möchtest?
+              Dies kann nicht rückgängig gemacht werden und alle deine Statistiken, Gegenstände
+              und Erfolge werden gelöscht.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col space-y-2 sm:space-y-0 sm:space-x-2">
+            <Button 
+              variant="destructive" 
+              onClick={handleResetProgress}
+            >
+              Ja, zurücksetzen
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setConfirmResetOpen(false)}
+            >
+              Abbrechen
             </Button>
           </DialogFooter>
         </DialogContent>
