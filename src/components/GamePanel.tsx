@@ -43,7 +43,7 @@ const enemies: EnemyType[] = [
     maxHealth: 120,
     attack: 18,
     defense: 8,
-    image: "/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png",
+    image: "/lovable-uploads/01f81c53-3d24-47b7-b154-cddba1e9ce6d.png",
     minCoins: 15,
     maxCoins: 30,
     experience: 150
@@ -56,10 +56,36 @@ const enemies: EnemyType[] = [
     maxHealth: 150,
     attack: 22,
     defense: 12,
-    image: "/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png",
+    image: "/lovable-uploads/0b493dd9-8ad8-4a1f-81b0-f9defa2c422e.png",
     minCoins: 20,
     maxCoins: 40,
     experience: 200
+  },
+  {
+    id: 4,
+    name: "Feuerdämon",
+    level: 5,
+    health: 200,
+    maxHealth: 200,
+    attack: 28,
+    defense: 15,
+    image: "/lovable-uploads/27914368-3994-4663-b43b-c03a32267fd6.png",
+    minCoins: 30,
+    maxCoins: 50,
+    experience: 300
+  },
+  {
+    id: 5,
+    name: "Eisgolem",
+    level: 7,
+    health: 250,
+    maxHealth: 250,
+    attack: 35,
+    defense: 20,
+    image: "/lovable-uploads/2f3d1c68-a034-40b0-82c7-17885a27e6c9.png",
+    minCoins: 40,
+    maxCoins: 65,
+    experience: 400
   }
 ];
 
@@ -70,7 +96,7 @@ type BattleLog = {
 
 const GamePanel = () => {
   const { toast } = useToast();
-  const { playerName, playerStats, updatePlayerStats, setPlayerCoins } = useGameContext();
+  const { playerName, playerStats, updatePlayerStats, setPlayerCoins, inventory } = useGameContext();
   
   const [showBattleDialog, setShowBattleDialog] = useState(false);
   const [battleStarted, setBattleStarted] = useState(false);
@@ -85,6 +111,7 @@ const GamePanel = () => {
   const [showPlayerAttackAnimation, setShowPlayerAttackAnimation] = useState(false);
   const [showEnemyAttackAnimation, setShowEnemyAttackAnimation] = useState(false);
   const [showHealAnimation, setShowHealAnimation] = useState(false);
+  const [initialPlayerHealth, setInitialPlayerHealth] = useState(0);
   
   // Initialize player health when component mounts
   useEffect(() => {
@@ -98,29 +125,61 @@ const GamePanel = () => {
     setPlayerMaxHealth(playerStats.maxHealth);
   }, [playerStats.health, playerStats.maxHealth, updatePlayerStats]);
   
-  // Battle statistics
-  const stats = {
-    victories: 24,
-    defeats: 8,
-    winRate: '75%',
-    kills: 42,
-    highestDamage: 87
+  // Battle statistics - start at 0
+  const [stats, setStats] = useState({
+    victories: 0,
+    defeats: 0,
+    winRate: '0%',
+    kills: 0,
+    highestDamage: 0
+  });
+  
+  // Get equipped items
+  const equippedWeapon = inventory.find(item => item.type === 'weapon' && item.equipped);
+  const equippedArmor = inventory.find(item => item.type === 'armor' && item.equipped);
+  const equippedAccessory = inventory.find(item => item.type === 'accessory' && item.equipped);
+  
+  // Calculate bonus stats from equipped items
+  const calcBonusStats = () => {
+    let bonusAttack = 0;
+    let bonusDefense = 0;
+    let bonusHealth = 0;
+    
+    if (equippedWeapon && equippedWeapon.stats) {
+      bonusAttack += equippedWeapon.stats.attack || 0;
+    }
+    
+    if (equippedArmor && equippedArmor.stats) {
+      bonusDefense += equippedArmor.stats.defense || 0;
+      bonusHealth += equippedArmor.stats.health || 0;
+    }
+    
+    if (equippedAccessory && equippedAccessory.stats) {
+      bonusAttack += equippedAccessory.stats.attack || 0;
+      bonusDefense += equippedAccessory.stats.defense || 0;
+      bonusHealth += equippedAccessory.stats.health || 0;
+    }
+    
+    return { bonusAttack, bonusDefense, bonusHealth };
   };
+  
+  const bonusStats = calcBonusStats();
   
   // Handle battle start
   const handleBattleStart = () => {
     // Choose a random enemy based on player level
-    const enemyIndex = Math.min(
-      Math.floor(Math.random() * enemies.length),
-      enemies.length - 1
-    );
-    const selectedEnemy = {...enemies[enemyIndex]};
+    const eligibleEnemies = enemies.filter(e => e.level <= playerStats.level + 2);
+    const enemyIndex = Math.floor(Math.random() * eligibleEnemies.length);
+    const selectedEnemy = {...eligibleEnemies[enemyIndex]};
+    
+    // Store initial player health to calculate loss later
+    setInitialPlayerHealth(playerStats.health);
     
     // Reset battle state
     setBattleStarted(true);
     setCurrentEnemy(selectedEnemy);
     setEnemyHealth(selectedEnemy.health);
-    setPlayerHealth(playerStats.health);
+    setPlayerHealth(playerStats.health + bonusStats.bonusHealth);
     setBattleLogs([{
       message: `Kampf gegen ${selectedEnemy.name} beginnt!`,
       type: 'system'
@@ -139,8 +198,14 @@ const GamePanel = () => {
     
     // Calculate damage with some randomness
     const damageMultiplier = 0.8 + Math.random() * 0.4; // 80% to 120% damage
-    const damage = Math.max(1, Math.floor(playerStats.strength * damageMultiplier - currentEnemy.defense * 0.5));
+    const totalAttack = playerStats.strength + bonusStats.bonusAttack;
+    const damage = Math.max(1, Math.floor(totalAttack * damageMultiplier - currentEnemy.defense * 0.5));
     const newEnemyHealth = Math.max(0, enemyHealth - damage);
+    
+    // Update stats if this is the highest damage
+    if (damage > stats.highestDamage) {
+      setStats(prev => ({...prev, highestDamage: damage}));
+    }
     
     // Add sound effect
     // playSound('attack');
@@ -178,7 +243,8 @@ const GamePanel = () => {
     
     // Calculate damage with some randomness
     const damageMultiplier = 0.8 + Math.random() * 0.4; // 80% to 120% damage
-    const damage = Math.max(1, Math.floor(currentEnemy.attack * damageMultiplier - playerStats.defense * 0.4));
+    const totalDefense = playerStats.defense + bonusStats.bonusDefense;
+    const damage = Math.max(1, Math.floor(currentEnemy.attack * damageMultiplier - totalDefense * 0.4));
     const newPlayerHealth = Math.max(0, playerHealth - damage);
     
     // Add sound effect
@@ -187,7 +253,6 @@ const GamePanel = () => {
     // Update player health
     setTimeout(() => {
       setPlayerHealth(newPlayerHealth);
-      updatePlayerStats({ health: newPlayerHealth });
       
       // Add log
       setBattleLogs(prev => [...prev, {
@@ -211,15 +276,14 @@ const GamePanel = () => {
     setTimeout(() => setShowHealAnimation(false), 1000);
     
     // Calculate healing
-    const healAmount = Math.floor(playerMaxHealth * 0.2);
-    const newPlayerHealth = Math.min(playerMaxHealth, playerHealth + healAmount);
+    const healAmount = Math.floor((playerMaxHealth + bonusStats.bonusHealth) * 0.2);
+    const newPlayerHealth = Math.min(playerMaxHealth + bonusStats.bonusHealth, playerHealth + healAmount);
     
     // Add sound effect
     // playSound('heal');
     
     // Update player health
     setPlayerHealth(newPlayerHealth);
-    updatePlayerStats({ health: newPlayerHealth });
     
     // Add log
     setBattleLogs(prev => [...prev, {
@@ -247,7 +311,8 @@ const GamePanel = () => {
     setTimeout(() => {
       // Calculate reduced damage (50% less)
       const damageMultiplier = 0.8 + Math.random() * 0.4; // 80% to 120% damage
-      const damage = Math.max(1, Math.floor((currentEnemy.attack * damageMultiplier - playerStats.defense * 0.4) * 0.5));
+      const totalDefense = playerStats.defense + bonusStats.bonusDefense;
+      const damage = Math.max(1, Math.floor((currentEnemy.attack * damageMultiplier - totalDefense * 0.4) * 0.5));
       const newPlayerHealth = Math.max(0, playerHealth - damage);
       
       // Show enemy attack animation with reduced effect
@@ -257,7 +322,6 @@ const GamePanel = () => {
       // Update player health
       setTimeout(() => {
         setPlayerHealth(newPlayerHealth);
-        updatePlayerStats({ health: newPlayerHealth });
         
         // Add log
         setBattleLogs(prev => [...prev, {
@@ -292,6 +356,20 @@ const GamePanel = () => {
     const newExp = playerStats.experience + expEarned;
     let newLevel = playerStats.level;
     let nextLevelExp = playerStats.nextLevel;
+    
+    // Update battle statistics
+    setStats(prev => {
+      const newVictories = prev.victories + 1;
+      const newKills = prev.kills + 1;
+      const winRate = Math.round((newVictories / (newVictories + prev.defeats)) * 100) + '%';
+      
+      return {
+        ...prev,
+        victories: newVictories,
+        kills: newKills,
+        winRate
+      };
+    });
     
     // Check for level up
     if (newExp >= playerStats.nextLevel) {
@@ -337,6 +415,20 @@ const GamePanel = () => {
     setBattleStarted(false);
     setBattleWon(false);
     
+    // Update battle statistics
+    setStats(prev => {
+      const newDefeats = prev.defeats + 1;
+      const winRate = prev.victories > 0 ? 
+        Math.round((prev.victories / (prev.victories + newDefeats)) * 100) + '%' : 
+        '0%';
+      
+      return {
+        ...prev,
+        defeats: newDefeats,
+        winRate
+      };
+    });
+    
     // Add log
     setBattleLogs(prev => [...prev, {
       message: `${playerName} wurde von ${currentEnemy.name} besiegt!`,
@@ -349,9 +441,14 @@ const GamePanel = () => {
     const coinsPenalty = Math.floor(Math.random() * 10) + 5;
     setPlayerCoins(prev => Math.max(0, prev - coinsPenalty));
     
+    // Calculate health loss (half of the damage taken)
+    const healthLoss = Math.floor((initialPlayerHealth - playerHealth) / 2);
+    const newPlayerHealth = Math.max(1, playerStats.health - healthLoss);
+    updatePlayerStats({ health: newPlayerHealth });
+    
     // Add penalty log
     setBattleLogs(prev => [...prev, {
-      message: `Du verlierst ${coinsPenalty} Münzen!`,
+      message: `Du verlierst ${coinsPenalty} Münzen und ${healthLoss} dauerhaft Lebenspunkte!`,
       type: 'system'
     }]);
   };
@@ -366,9 +463,9 @@ const GamePanel = () => {
     setBattleLogs([]);
     
     // If player health is too low, heal a bit
-    if (playerHealth < playerMaxHealth * 0.2) {
-      const healAmount = Math.floor(playerMaxHealth * 0.3);
-      const newPlayerHealth = Math.min(playerMaxHealth, playerHealth + healAmount);
+    if (playerStats.health < playerStats.maxHealth * 0.2) {
+      const healAmount = Math.floor(playerStats.maxHealth * 0.3);
+      const newPlayerHealth = Math.min(playerStats.maxHealth, playerStats.health + healAmount);
       updatePlayerStats({ health: newPlayerHealth });
       
       toast({
@@ -446,6 +543,35 @@ const GamePanel = () => {
               <span className="text-game-foreground/70">Höchster Schaden</span>
               <span className="text-red-400">{stats.highestDamage}</span>
             </div>
+
+            {/* Player Stats */}
+            <div className="border-t border-game-accent/30 mt-4 pt-4">
+              <h4 className="text-game-accent mb-2">Deine Stats</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center">
+                  <Heart className="h-4 w-4 text-red-400 mr-1" />
+                  <span className="text-game-foreground/70">{playerStats.health}/{playerStats.maxHealth}</span>
+                </div>
+                <div className="flex items-center">
+                  <Sword className="h-4 w-4 text-yellow-400 mr-1" />
+                  <span className="text-game-foreground/70">{playerStats.strength}</span>
+                  {bonusStats.bonusAttack > 0 && (
+                    <span className="text-green-400 text-xs ml-1">+{bonusStats.bonusAttack}</span>
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <Shield className="h-4 w-4 text-blue-400 mr-1" />
+                  <span className="text-game-foreground/70">{playerStats.defense}</span>
+                  {bonusStats.bonusDefense > 0 && (
+                    <span className="text-green-400 text-xs ml-1">+{bonusStats.bonusDefense}</span>
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <Activity className="h-4 w-4 text-purple-400 mr-1" />
+                  <span className="text-game-foreground/70">Lvl {playerStats.level}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </Card>
       </div>
@@ -502,12 +628,12 @@ const GamePanel = () => {
                       <Heart className="h-4 w-4 text-red-500 mr-1" />
                       <span>HP</span>
                     </div>
-                    <span>{playerHealth}/{playerMaxHealth}</span>
+                    <span>{playerHealth}/{playerMaxHealth + bonusStats.bonusHealth}</span>
                   </div>
                   <div className="w-full bg-game/50 rounded-full h-2">
                     <div 
                       className="bg-red-500 h-2 rounded-full transition-all duration-500" 
-                      style={{ width: `${(playerHealth / playerMaxHealth) * 100}%` }}
+                      style={{ width: `${(playerHealth / (playerMaxHealth + bonusStats.bonusHealth)) * 100}%` }}
                     ></div>
                   </div>
                 </div>
@@ -516,10 +642,37 @@ const GamePanel = () => {
                   <div className="flex items-center">
                     <Sword className="h-4 w-4 text-game-accent mr-1" />
                     <span>ATK: {playerStats.strength}</span>
+                    {bonusStats.bonusAttack > 0 && (
+                      <span className="text-green-400 text-xs ml-1">+{bonusStats.bonusAttack}</span>
+                    )}
                   </div>
                   <div className="flex items-center">
                     <Shield className="h-4 w-4 text-game-accent mr-1" />
                     <span>DEF: {playerStats.defense}</span>
+                    {bonusStats.bonusDefense > 0 && (
+                      <span className="text-green-400 text-xs ml-1">+{bonusStats.bonusDefense}</span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Equipment display */}
+                <div className="text-xs text-game-foreground/70 mt-2">
+                  <div className="flex space-x-2">
+                    {equippedWeapon && (
+                      <div className="bg-game/30 px-1 py-0.5 rounded">
+                        ⚔️ {equippedWeapon.name}
+                      </div>
+                    )}
+                    {equippedArmor && (
+                      <div className="bg-game/30 px-1 py-0.5 rounded">
+                        🛡️ {equippedArmor.name}
+                      </div>
+                    )}
+                    {equippedAccessory && (
+                      <div className="bg-game/30 px-1 py-0.5 rounded">
+                        💍 {equippedAccessory.name}
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -538,7 +691,7 @@ const GamePanel = () => {
                     <Button 
                       onClick={handlePlayerHeal}
                       className="bg-green-600 hover:bg-green-700 text-white"
-                      disabled={playerHealth >= playerMaxHealth || showHealAnimation}
+                      disabled={playerHealth >= playerMaxHealth + bonusStats.bonusHealth || showHealAnimation}
                     >
                       <Heart className="h-4 w-4 mr-1" />
                       Heilen
@@ -677,7 +830,13 @@ const GamePanel = () => {
                 )}
                 
                 {!battleWon && (
-                  <p className="text-game-foreground">Du hast den Kampf verloren!</p>
+                  <div className="space-y-2">
+                    <p className="text-game-foreground">Du hast den Kampf verloren!</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-game-foreground/70">Lebenspunkte verloren:</span>
+                      <span className="text-red-400">{Math.floor((initialPlayerHealth - playerHealth) / 2)}</span>
+                    </div>
+                  </div>
                 )}
                 
                 <Button 

@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Clock, Check, AlertTriangle, Coins, Shield } from 'lucide-react';
+import { Trophy, Clock, Check, AlertTriangle, Coins, Shield, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QuestEditor from './QuestEditor';
 import RewardPanel from './RewardPanel';
@@ -19,6 +19,9 @@ const QuestsPanel: React.FC = () => {
   
   // Difficulty levels
   const [difficultyLevel, setDifficultyLevel] = useState<'easy' | 'medium' | 'hard'>('easy');
+  
+  // Next quest reset time
+  const [nextResetTime, setNextResetTime] = useState<Date>(new Date());
   
   // Get difficulty multiplier
   const getDifficultyMultiplier = () => {
@@ -128,6 +131,60 @@ const QuestsPanel: React.FC = () => {
     },
   ]);
   
+  // Calculate next reset time (midnight tonight)
+  useEffect(() => {
+    const calculateNextResetTime = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      setNextResetTime(tomorrow);
+    };
+    
+    calculateNextResetTime();
+    
+    // Check for reset every minute
+    const interval = setInterval(() => {
+      const now = new Date();
+      
+      // If current time is past the reset time, reset quests and calculate next reset
+      if (now >= nextResetTime) {
+        resetQuests();
+        calculateNextResetTime();
+        
+        toast({
+          title: "Quests zurückgesetzt!",
+          description: "Neue tägliche Quests sind verfügbar.",
+          variant: "default",
+        });
+      }
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, [nextResetTime]);
+  
+  // Reset all active quests to 0 progress
+  const resetQuests = () => {
+    setQuests(quests.map(quest => {
+      if (quest.status === "active") {
+        return { ...quest, progress: 0 };
+      }
+      return quest;
+    }));
+  };
+  
+  // Format time until reset
+  const formatTimeUntilReset = () => {
+    const now = new Date();
+    const diff = nextResetTime.getTime() - now.getTime();
+    
+    // Convert to hours, minutes
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${hours}h ${minutes}m`;
+  };
+  
   // Open quest editor
   const openQuestEditor = (id: number) => {
     setEditingQuest(id);
@@ -177,6 +234,17 @@ const QuestsPanel: React.FC = () => {
     toast({
       title: "Quest abgeschlossen!",
       description: "Belohnungen wurden deinem Konto gutgeschrieben.",
+      variant: "default",
+    });
+  };
+  
+  // Manually trigger quest reset (dev feature)
+  const manualReset = () => {
+    resetQuests();
+    
+    toast({
+      title: "Quests manuell zurückgesetzt!",
+      description: "Alle Quest-Fortschritte wurden zurückgesetzt.",
       variant: "default",
     });
   };
@@ -291,13 +359,13 @@ const QuestsPanel: React.FC = () => {
                 <Button 
                   size="sm" 
                   variant="outline"
-                  className="text-game-foreground/70 border-game-foreground/20 hover:bg-game-secondary text-xs"
+                  className="text-white border-game-foreground/20 hover:bg-game-secondary text-xs"
                   onClick={(e) => {
                     e.stopPropagation();
                     progressQuest(quest.id);
                   }}
                 >
-                  Fortschritt
+                  <span className="text-white">Fortschritt</span>
                 </Button>
                 
                 {quest.progress >= quest.total && (
@@ -309,7 +377,7 @@ const QuestsPanel: React.FC = () => {
                       completeQuest(quest.id);
                     }}
                   >
-                    Abschließen
+                    <span className="text-white">Abschließen</span>
                   </Button>
                 )}
               </>
@@ -327,34 +395,58 @@ const QuestsPanel: React.FC = () => {
         <p className="text-game-foreground/70">Schließe Übungen ab, um Belohnungen zu erhalten</p>
       </div>
       
-      {/* Difficulty selector */}
-      <div className="mb-6 game-card p-4">
-        <h3 className="text-game-accent mb-3">Schwierigkeitsgrad</h3>
-        <div className="flex space-x-2">
-          <Button 
-            variant={difficultyLevel === 'easy' ? 'default' : 'outline'}
-            className={difficultyLevel === 'easy' ? 'bg-game-accent' : 'border-game-accent/30 text-game-foreground/70'}
-            onClick={() => changeDifficulty('easy')}
-            size="sm"
-          >
-            Einfach
-          </Button>
-          <Button 
-            variant={difficultyLevel === 'medium' ? 'default' : 'outline'}
-            className={difficultyLevel === 'medium' ? 'bg-game-accent' : 'border-game-accent/30 text-game-foreground/70'}
-            onClick={() => changeDifficulty('medium')}
-            size="sm"
-          >
-            Mittel
-          </Button>
-          <Button 
-            variant={difficultyLevel === 'hard' ? 'default' : 'outline'}
-            className={difficultyLevel === 'hard' ? 'bg-game-accent' : 'border-game-accent/30 text-game-foreground/70'}
-            onClick={() => changeDifficulty('hard')}
-            size="sm"
-          >
-            Schwer
-          </Button>
+      <div className="flex justify-between items-center mb-4">
+        {/* Difficulty selector */}
+        <div className="game-card p-3 flex-1 mr-4">
+          <h3 className="text-game-accent mb-2 text-sm">Schwierigkeitsgrad</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={difficultyLevel === 'easy' ? 'default' : 'outline'}
+              className={difficultyLevel === 'easy' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'}
+              onClick={() => changeDifficulty('easy')}
+              size="sm"
+            >
+              <span className="text-white">Einfach</span>
+            </Button>
+            <Button 
+              variant={difficultyLevel === 'medium' ? 'default' : 'outline'}
+              className={difficultyLevel === 'medium' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'}
+              onClick={() => changeDifficulty('medium')}
+              size="sm"
+            >
+              <span className="text-white">Mittel</span>
+            </Button>
+            <Button 
+              variant={difficultyLevel === 'hard' ? 'default' : 'outline'}
+              className={difficultyLevel === 'hard' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'}
+              onClick={() => changeDifficulty('hard')}
+              size="sm"
+            >
+              <span className="text-white">Schwer</span>
+            </Button>
+          </div>
+        </div>
+        
+        {/* Quest reset timer */}
+        <div className="game-card p-3 flex-1">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-game-accent text-sm">Nächster Reset</h3>
+              <div className="flex items-center mt-1">
+                <Clock className="h-4 w-4 text-game-foreground/70 mr-2" />
+                <span className="text-game-highlight">{formatTimeUntilReset()}</span>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-white border-game-foreground/20"
+              onClick={manualReset}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              <span className="text-white">Reset</span>
+            </Button>
+          </div>
         </div>
       </div>
       

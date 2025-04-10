@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Sparkles, MoreHorizontal, Coins, X, ChevronLeft } from 'lucide-react';
+import { Package, Sparkles, MoreHorizontal, Coins, X, ChevronLeft, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useGameContext } from '@/context/GameContext';
@@ -31,6 +31,8 @@ const ShopPanel: React.FC = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedLootbox, setSelectedLootbox] = useState<LootboxType | null>(null);
   const [showOpeningAnimation, setShowOpeningAnimation] = useState(false);
+  const [showLootboxOpening, setShowLootboxOpening] = useState(false);
+  const [currentReward, setCurrentReward] = useState<{item: string; rarity: string} | null>(null);
   
   // Mock Data
   const lootboxes: LootboxType[] = [
@@ -139,32 +141,34 @@ const ShopPanel: React.FC = () => {
     return { item: reward, rarity };
   };
   
-  // Open lootbox with animation
+  // Open lootbox with enhanced animation
   const openLootbox = (lootbox: LootboxType) => {
     if (playerCoins >= lootbox.price) {
       setPlayerCoins(prev => prev - lootbox.price);
       setSelectedLootbox(lootbox);
+      
+      // Show lootbox opening screen
+      setShowLootboxOpening(true);
       
       // Start opening animation
       setShowOpeningAnimation(true);
       
       // After animation, generate reward
       setTimeout(() => {
-        const { item, rarity } = generateReward(lootbox);
+        const reward = generateReward(lootbox);
+        setCurrentReward(reward);
+        setShowOpeningAnimation(false);
         
         // Add item to player inventory
         if (addInventoryItem) {
           addInventoryItem({
             id: Date.now(),
-            name: item,
-            type: getItemType(item),
-            rarity: rarity,
-            stats: getItemStats(rarity)
+            name: reward.item,
+            type: getItemType(reward.item),
+            rarity: reward.rarity as 'common' | 'rare' | 'epic' | 'legendary',
+            stats: getItemStats(reward.rarity)
           });
         }
-        
-        setLastReward(item);
-        setShowOpeningAnimation(false);
       }, 2000);
     } else {
       toast({
@@ -173,6 +177,15 @@ const ShopPanel: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+  
+  // Close lootbox opening screen and show reward
+  const closeLootboxOpening = () => {
+    if (currentReward) {
+      setLastReward(currentReward.item);
+    }
+    setShowLootboxOpening(false);
+    setCurrentReward(null);
   };
   
   // Helper function to determine item type
@@ -226,6 +239,22 @@ const ShopPanel: React.FC = () => {
     rare: 1,
     epic: 2,
     legendary: 3
+  };
+  
+  // Get reward rarity color
+  const getRewardRarityColor = (rarity: string) => {
+    switch(rarity) {
+      case 'common':
+        return 'text-gray-200 border-gray-400';
+      case 'rare':
+        return 'text-yellow-400 border-yellow-400';
+      case 'epic':
+        return 'text-purple-400 border-purple-400';
+      case 'legendary':
+        return 'text-blue-400 border-blue-400 blue-glow';
+      default:
+        return 'text-gray-200';
+    }
   };
   
   return (
@@ -296,11 +325,11 @@ const ShopPanel: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="text-game-foreground border-game-foreground/20 hover:bg-game-secondary"
+                  className="text-white border-game-accent/30 hover:bg-game-secondary"
                   onClick={() => showDetails(lootbox)}
                 >
                   <MoreHorizontal className="h-4 w-4" />
-                  <span className="ml-1">Details</span>
+                  <span className="ml-1 text-white">Details</span>
                 </Button>
                 
                 <Button 
@@ -308,7 +337,7 @@ const ShopPanel: React.FC = () => {
                   onClick={() => openLootbox(lootbox)}
                   disabled={playerCoins < lootbox.price}
                 >
-                  Kaufen
+                  <span className="text-white">Kaufen</span>
                 </Button>
               </div>
             </CardContent>
@@ -375,41 +404,106 @@ const ShopPanel: React.FC = () => {
                   <span className="text-game-highlight">{selectedLootbox.price}</span>
                 </div>
                 
-                <Button 
-                  onClick={() => {
-                    setShowDetailsDialog(false);
-                    openLootbox(selectedLootbox);
-                  }}
-                  disabled={playerCoins < selectedLootbox.price}
-                  className="bg-game-accent hover:bg-game-accent/90"
-                >
-                  Kaufen
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setShowDetailsDialog(false)}
+                    variant="outline"
+                    className="text-white border-game-accent/30 hover:bg-game-accent/10"
+                  >
+                    Schließen
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      setShowDetailsDialog(false);
+                      openLootbox(selectedLootbox);
+                    }}
+                    disabled={playerCoins < selectedLootbox.price}
+                    className="bg-game-accent hover:bg-game-accent/90"
+                  >
+                    <span className="text-white">Kaufen</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>
         )}
       </Dialog>
       
-      {/* Lootbox Opening Animation */}
-      {showOpeningAnimation && selectedLootbox && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-          <div className="relative">
-            <div className="animate-pulse-light blue-glow">
-              <img 
-                src={selectedLootbox.image} 
-                alt="Opening Lootbox" 
-                className="h-32 w-32 animate-float" 
-              />
+      {/* Lootbox Opening Experience */}
+      <Dialog open={showLootboxOpening} onOpenChange={(open) => {
+        if (!open && currentReward) {
+          closeLootboxOpening();
+        } else if (!currentReward) {
+          setShowLootboxOpening(open);
+        }
+      }}>
+        <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground max-w-lg h-[400px] flex flex-col items-center justify-center">
+          {showOpeningAnimation ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="relative animate-pulse-light">
+                <img 
+                  src={selectedLootbox?.image} 
+                  alt="Opening Lootbox" 
+                  className="h-32 w-32 animate-float" 
+                />
+                <div className="absolute -top-2 -right-2">
+                  <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
+                </div>
+              </div>
+              <div className="mt-6 text-center">
+                <h3 className="text-xl font-bold text-game-accent animate-pulse mb-2">Öffne Lootbox...</h3>
+                <p className="text-game-foreground/70 text-sm">Was wird drin sein?</p>
+              </div>
             </div>
-            <div className="mt-4 text-center text-game-accent animate-pulse-light">
-              Öffne Lootbox...
+          ) : currentReward ? (
+            <div className="flex flex-col items-center justify-center h-full animate-scale-in">
+              <Sparkles className="h-10 w-10 text-yellow-400 mb-4 animate-pulse" />
+              <div className={`text-center p-6 rounded-lg border-2 ${getRewardRarityColor(currentReward.rarity)}`}>
+                <h3 className="text-xl font-bold text-game-accent mb-4">
+                  Du hast erhalten:
+                </h3>
+                <div className="text-3xl font-bold mb-4 animate-float">
+                  {getItemIcon(currentReward.item)}
+                </div>
+                <p className={`text-2xl font-bold ${getRewardRarityColor(currentReward.rarity)} mb-2`}>
+                  {currentReward.item}
+                </p>
+                <p className="text-sm text-game-foreground/70 mb-4">
+                  Seltenheit: <span className={getRewardRarityColor(currentReward.rarity)}>
+                    {currentReward.rarity === 'common' ? 'Gewöhnlich' : 
+                     currentReward.rarity === 'rare' ? 'Selten' :
+                     currentReward.rarity === 'epic' ? 'Episch' : 'Legendär'}
+                  </span>
+                </p>
+                <Button 
+                  onClick={closeLootboxOpening}
+                  className="bg-game-accent hover:bg-game-accent/90 mt-2"
+                >
+                  <Gift className="mr-2 h-4 w-4" />
+                  <span className="text-white">Zum Inventar hinzufügen</span>
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
+};
+
+// Helper function to get an appropriate icon for an item
+const getItemIcon = (item: string) => {
+  if (item.includes('Schwert')) return '⚔️';
+  if (item.includes('Rüstung')) return '🛡️';
+  if (item.includes('Trank')) return '🧪';
+  if (item.includes('Helm')) return '🪖';
+  if (item.includes('Bogen')) return '🏹';
+  if (item.includes('Ring')) return '💍';
+  if (item.includes('Krone')) return '👑';
+  if (item.includes('Schild')) return '🛡️';
+  if (item.includes('Stab')) return '🪄';
+  return '🎁';
 };
 
 export default ShopPanel;
