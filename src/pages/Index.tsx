@@ -30,6 +30,11 @@ const Index = () => {
     }
   };
 
+  // Dynamic document title
+  React.useEffect(() => {
+    document.title = "Zero Quest";
+  }, []);
+
   return (
     <>
       {(isFirstTime || showTutorial) && <WelcomeSetup />}

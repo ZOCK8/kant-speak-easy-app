@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Shield, Sword, Package, Trophy, User, Activity, Menu, X, Backpack, Settings, RefreshCw, AlertTriangle, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -237,7 +238,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
               alt="Game Logo"
               className="h-6 w-6" 
             />
-            <h1 className="text-xl md:text-2xl font-bold text-game-accent">Monster Battle</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-game-accent">Zero Quest</h1>
           </div>
           
           {isMobile && (
@@ -408,7 +409,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
       
       <footer className="bg-game-secondary border-t border-game-accent/30 py-3 hidden md:block">
         <div className="container mx-auto px-4 text-center text-xs text-game-foreground/50">
-          <p>© 2025 Monster Battle</p>
+          <p>© 2025 Zero Quest</p>
         </div>
       </footer>
     </div>

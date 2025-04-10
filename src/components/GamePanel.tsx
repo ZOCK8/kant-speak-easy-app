@@ -82,6 +82,9 @@ const GamePanel = () => {
   const [showBattleResult, setShowBattleResult] = useState(false);
   const [battleWon, setBattleWon] = useState(false);
   const [rewards, setRewards] = useState({ coins: 0, experience: 0 });
+  const [showPlayerAttackAnimation, setShowPlayerAttackAnimation] = useState(false);
+  const [showEnemyAttackAnimation, setShowEnemyAttackAnimation] = useState(false);
+  const [showHealAnimation, setShowHealAnimation] = useState(false);
   
   // Initialize player health when component mounts
   useEffect(() => {
@@ -106,13 +109,20 @@ const GamePanel = () => {
   
   // Handle battle start
   const handleBattleStart = () => {
+    // Choose a random enemy based on player level
+    const enemyIndex = Math.min(
+      Math.floor(Math.random() * enemies.length),
+      enemies.length - 1
+    );
+    const selectedEnemy = {...enemies[enemyIndex]};
+    
     // Reset battle state
     setBattleStarted(true);
-    setCurrentEnemy({...enemies[0]});
-    setEnemyHealth(enemies[0].health);
+    setCurrentEnemy(selectedEnemy);
+    setEnemyHealth(selectedEnemy.health);
     setPlayerHealth(playerStats.health);
     setBattleLogs([{
-      message: `Kampf gegen ${enemies[0].name} beginnt!`,
+      message: `Kampf gegen ${selectedEnemy.name} beginnt!`,
       type: 'system'
     }]);
     setShowBattleDialog(true);
@@ -123,62 +133,89 @@ const GamePanel = () => {
   const handlePlayerAttack = () => {
     if (!battleStarted) return;
     
-    // Calculate damage
-    const damage = Math.max(1, Math.floor(playerStats.strength * (1 + Math.random() * 0.5) - currentEnemy.defense * 0.5));
+    // Show attack animation
+    setShowPlayerAttackAnimation(true);
+    setTimeout(() => setShowPlayerAttackAnimation(false), 500);
+    
+    // Calculate damage with some randomness
+    const damageMultiplier = 0.8 + Math.random() * 0.4; // 80% to 120% damage
+    const damage = Math.max(1, Math.floor(playerStats.strength * damageMultiplier - currentEnemy.defense * 0.5));
     const newEnemyHealth = Math.max(0, enemyHealth - damage);
     
+    // Add sound effect
+    // playSound('attack');
+    
     // Update enemy health
-    setEnemyHealth(newEnemyHealth);
-    
-    // Add log
-    setBattleLogs(prev => [...prev, {
-      message: `${playerName} greift an und verursacht ${damage} Schaden!`,
-      type: 'player-attack'
-    }]);
-    
-    // Check if enemy is defeated
-    if (newEnemyHealth <= 0) {
-      handleBattleWin();
-      return;
-    }
-    
-    // Enemy attack after a short delay
     setTimeout(() => {
-      handleEnemyAttack();
-    }, 1000);
+      setEnemyHealth(newEnemyHealth);
+      
+      // Add log
+      setBattleLogs(prev => [...prev, {
+        message: `${playerName} greift an und verursacht ${damage} Schaden!`,
+        type: 'player-attack'
+      }]);
+      
+      // Check if enemy is defeated
+      if (newEnemyHealth <= 0) {
+        handleBattleWin();
+        return;
+      }
+      
+      // Enemy attack after a short delay
+      setTimeout(() => {
+        handleEnemyAttack();
+      }, 1000);
+    }, 500);
   };
   
   // Enemy attack
   const handleEnemyAttack = () => {
     if (!battleStarted) return;
     
-    // Calculate damage
-    const damage = Math.max(1, Math.floor(currentEnemy.attack * (0.8 + Math.random() * 0.4) - playerStats.defense * 0.4));
+    // Show enemy attack animation
+    setShowEnemyAttackAnimation(true);
+    setTimeout(() => setShowEnemyAttackAnimation(false), 500);
+    
+    // Calculate damage with some randomness
+    const damageMultiplier = 0.8 + Math.random() * 0.4; // 80% to 120% damage
+    const damage = Math.max(1, Math.floor(currentEnemy.attack * damageMultiplier - playerStats.defense * 0.4));
     const newPlayerHealth = Math.max(0, playerHealth - damage);
     
+    // Add sound effect
+    // playSound('enemy-attack');
+    
     // Update player health
-    setPlayerHealth(newPlayerHealth);
-    updatePlayerStats({ health: newPlayerHealth });
-    
-    // Add log
-    setBattleLogs(prev => [...prev, {
-      message: `${currentEnemy.name} greift an und verursacht ${damage} Schaden!`,
-      type: 'enemy-attack'
-    }]);
-    
-    // Check if player is defeated
-    if (newPlayerHealth <= 0) {
-      handleBattleLose();
-    }
+    setTimeout(() => {
+      setPlayerHealth(newPlayerHealth);
+      updatePlayerStats({ health: newPlayerHealth });
+      
+      // Add log
+      setBattleLogs(prev => [...prev, {
+        message: `${currentEnemy.name} greift an und verursacht ${damage} Schaden!`,
+        type: 'enemy-attack'
+      }]);
+      
+      // Check if player is defeated
+      if (newPlayerHealth <= 0) {
+        handleBattleLose();
+      }
+    }, 500);
   };
   
   // Player heal
   const handlePlayerHeal = () => {
     if (!battleStarted || playerHealth >= playerMaxHealth) return;
     
+    // Show heal animation
+    setShowHealAnimation(true);
+    setTimeout(() => setShowHealAnimation(false), 1000);
+    
     // Calculate healing
     const healAmount = Math.floor(playerMaxHealth * 0.2);
     const newPlayerHealth = Math.min(playerMaxHealth, playerHealth + healAmount);
+    
+    // Add sound effect
+    // playSound('heal');
     
     // Update player health
     setPlayerHealth(newPlayerHealth);
@@ -209,23 +246,30 @@ const GamePanel = () => {
     // Enemy attack with reduced damage after a short delay
     setTimeout(() => {
       // Calculate reduced damage (50% less)
-      const damage = Math.max(1, Math.floor((currentEnemy.attack * (0.8 + Math.random() * 0.4) - playerStats.defense * 0.4) * 0.5));
+      const damageMultiplier = 0.8 + Math.random() * 0.4; // 80% to 120% damage
+      const damage = Math.max(1, Math.floor((currentEnemy.attack * damageMultiplier - playerStats.defense * 0.4) * 0.5));
       const newPlayerHealth = Math.max(0, playerHealth - damage);
       
+      // Show enemy attack animation with reduced effect
+      setShowEnemyAttackAnimation(true);
+      setTimeout(() => setShowEnemyAttackAnimation(false), 500);
+      
       // Update player health
-      setPlayerHealth(newPlayerHealth);
-      updatePlayerStats({ health: newPlayerHealth });
-      
-      // Add log
-      setBattleLogs(prev => [...prev, {
-        message: `${currentEnemy.name} greift an, aber ${playerName} verteidigt und nimmt nur ${damage} Schaden!`,
-        type: 'enemy-attack'
-      }]);
-      
-      // Check if player is defeated
-      if (newPlayerHealth <= 0) {
-        handleBattleLose();
-      }
+      setTimeout(() => {
+        setPlayerHealth(newPlayerHealth);
+        updatePlayerStats({ health: newPlayerHealth });
+        
+        // Add log
+        setBattleLogs(prev => [...prev, {
+          message: `${currentEnemy.name} greift an, aber ${playerName} verteidigt und nimmt nur ${damage} Schaden!`,
+          type: 'enemy-attack'
+        }]);
+        
+        // Check if player is defeated
+        if (newPlayerHealth <= 0) {
+          handleBattleLose();
+        }
+      }, 500);
     }, 1000);
   };
   
@@ -350,7 +394,7 @@ const GamePanel = () => {
               <img 
                 src="/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png"
                 alt="Monster"
-                className="h-24 w-24 object-contain blue-glow-soft" 
+                className="h-24 w-24 object-contain blue-glow-soft animate-float" 
               />
             </div>
             <h4 className="text-lg font-medium text-game-foreground">{currentEnemy.name}</h4>
@@ -437,6 +481,21 @@ const GamePanel = () => {
             <div className="game-card">
               <h3 className="text-game-accent mb-4">{playerName}</h3>
               <div className="space-y-4">
+                <div className="flex justify-center mb-4">
+                  <div className={`relative ${showPlayerAttackAnimation ? 'animate-bounce' : ''}`}>
+                    <img 
+                      src={getAvatarImage()}
+                      alt="Player"
+                      className={`h-16 w-16 object-contain ${showHealAnimation ? 'animate-pulse blue-glow' : ''}`}
+                    />
+                    {showHealAnimation && (
+                      <div className="absolute -top-4 -right-4 bg-green-500 text-white rounded-full px-2 py-1 text-xs animate-bounce">
+                        +Health
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div>
                   <div className="flex justify-between items-center text-sm mb-1">
                     <div className="flex items-center">
@@ -470,17 +529,18 @@ const GamePanel = () => {
                     <Button 
                       onClick={handlePlayerAttack}
                       className="game-button"
+                      disabled={showPlayerAttackAnimation}
                     >
-                      <Sword className="h-4 w-4" />
+                      <Sword className="h-4 w-4 mr-1" />
                       Angreifen
                     </Button>
                     
                     <Button 
                       onClick={handlePlayerHeal}
                       className="bg-green-600 hover:bg-green-700 text-white"
-                      disabled={playerHealth >= playerMaxHealth}
+                      disabled={playerHealth >= playerMaxHealth || showHealAnimation}
                     >
-                      <Heart className="h-4 w-4" />
+                      <Heart className="h-4 w-4 mr-1" />
                       Heilen
                     </Button>
                     
@@ -488,7 +548,7 @@ const GamePanel = () => {
                       onClick={handleSkipTurn}
                       className="bg-yellow-600 hover:bg-yellow-700 text-white col-span-2"
                     >
-                      <Shield className="h-4 w-4" />
+                      <Shield className="h-4 w-4 mr-1" />
                       Verteidigen
                     </Button>
                   </div>
@@ -501,11 +561,13 @@ const GamePanel = () => {
               <h3 className="text-red-400 mb-4">{currentEnemy.name}</h3>
               <div className="space-y-4">
                 <div className="flex justify-center mb-4">
-                  <img 
-                    src={currentEnemy.image}
-                    alt={currentEnemy.name}
-                    className="h-16 w-16 object-contain blue-glow" 
-                  />
+                  <div className={`relative ${showEnemyAttackAnimation ? 'animate-bounce' : ''}`}>
+                    <img 
+                      src={currentEnemy.image}
+                      alt={currentEnemy.name}
+                      className="h-16 w-16 object-contain"
+                    />
+                  </div>
                 </div>
                 
                 <div>
@@ -542,6 +604,33 @@ const GamePanel = () => {
               </div>
             </div>
           </div>
+          
+          {/* Battle Animation Area */}
+          {battleStarted && !showBattleResult && (
+            <div className="mt-4 h-16 relative border-2 border-dashed border-game-accent/30 rounded-md flex items-center justify-center">
+              {showPlayerAttackAnimation && (
+                <div className="absolute left-0 animate-battle-slash w-full h-full flex items-center justify-center">
+                  <div className="relative">
+                    <Sword className="h-10 w-10 text-yellow-500 rotate-45 animate-pulse blue-glow" />
+                    <span className="absolute -top-2 -right-2 text-red-500 font-bold text-sm animate-bounce">
+                      HIT!
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {showEnemyAttackAnimation && (
+                <div className="absolute right-0 animate-battle-slash-reverse w-full h-full flex items-center justify-center">
+                  <div className="relative">
+                    <Zap className="h-10 w-10 text-red-500 rotate-45 animate-pulse" />
+                    <span className="absolute -top-2 -left-2 text-red-500 font-bold text-sm animate-bounce">
+                      HIT!
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Battle Log */}
           <div className="mt-4 h-40 overflow-y-auto p-2 game-card">
@@ -612,6 +701,24 @@ const GamePanel = () => {
       </Dialog>
     </div>
   );
+};
+
+// Helper function to get avatar image
+const getAvatarImage = () => {
+  const { selectedAvatar } = useGameContext();
+  
+  switch(selectedAvatar) {
+    case 'player1':
+      return "/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png";
+    case 'player2':
+      return "/lovable-uploads/e6bb07f6-039d-4ed3-bece-ad8d405fcea4.png";
+    case 'player3':
+      return "/lovable-uploads/78ff7be8-098a-4011-b094-98ab0dc84162.png";
+    case 'monster':
+      return "/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png";
+    default:
+      return "/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png";
+  }
 };
 
 export default GamePanel;

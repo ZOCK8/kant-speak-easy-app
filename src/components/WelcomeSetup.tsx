@@ -18,19 +18,20 @@ const WelcomeSetup: React.FC = () => {
   
   const steps = [
     {
-      title: "Willkommen bei Monster Battle!",
-      description: "Beginne dein Abenteuer und verbessere deinen Charakter durch das Abschließen von Quests.",
+      title: "Willkommen bei Zero Quest!",
+      description: "Beginne dein Abenteuer und besiege mächtige Monster.",
       content: (
         <div className="flex flex-col items-center space-y-6">
-          <div className="relative w-24 h-24 animate-float">
+          <div className="relative w-36 h-36 animate-float">
             <img 
               src="/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png" 
               alt="Player Avatar" 
               className="w-full h-full object-contain blue-glow"
             />
           </div>
-          <p className="text-game-foreground/80">
+          <p className="text-game-foreground/80 text-center max-w-md">
             Dieses kurze Tutorial wird dir helfen, mit dem Spiel zu beginnen.
+            Wähle deinen Avatar und starte dein Abenteuer!
           </p>
         </div>
       )
@@ -63,7 +64,7 @@ const WelcomeSetup: React.FC = () => {
             <label className="block text-sm text-game-foreground/80 mb-3">
               Wähle dein Avatar:
             </label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div 
                 onClick={() => {
                   setAvatar('player1');
@@ -176,7 +177,7 @@ const WelcomeSetup: React.FC = () => {
     },
     {
       title: "Das Spiel verstehen",
-      description: "Lerne die Grundlagen von Monster Battle.",
+      description: "Lerne die Grundlagen von Zero Quest.",
       content: (
         <div className="space-y-4">
           <div className="game-card flex items-center">
@@ -291,7 +292,7 @@ const WelcomeSetup: React.FC = () => {
       completeTutorial();
       
       toast({
-        title: "Willkommen bei Monster Battle!",
+        title: "Willkommen bei Zero Quest!",
         description: "Dein Profil wurde erfolgreich erstellt.",
       });
     }
@@ -300,45 +301,51 @@ const WelcomeSetup: React.FC = () => {
   const currentStepData = steps[currentStep];
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 bg-moving-dots" style={{animationName: 'moveBackground', animationDuration: '20s', animationIterationCount: 'infinite', animationTimingFunction: 'linear'}}>
-      <Card className="max-w-md w-full bg-game border border-game-accent/30 text-game-foreground p-0 overflow-hidden animate-fade-in">
-        <div className="bg-game-secondary p-4 border-b border-game-accent/30">
-          <h2 className="text-xl font-bold text-game-accent">{currentStepData.title}</h2>
-          <p className="text-sm text-game-foreground/70">{currentStepData.description}</p>
-        </div>
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-moving-dots w-full h-full" style={{animationName: 'moveBackground', animationDuration: '20s', animationIterationCount: 'infinite', animationTimingFunction: 'linear'}}>
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-game/80 to-transparent opacity-50"></div>
+      
+      <div className="max-w-4xl w-full flex flex-col items-center justify-center px-4 z-10">
+        <h1 className="text-4xl md:text-6xl font-bold text-game-accent mb-6 text-center">ZERO QUEST</h1>
         
-        <div className="p-6">
-          {currentStepData.content}
-        </div>
-        
-        <div className="flex justify-between items-center border-t border-game-accent/30 p-4 bg-game-secondary/50">
-          <div className="flex space-x-1">
-            {steps.map((_, index) => (
-              <div 
-                key={index} 
-                className={`w-2 h-2 rounded-full ${
-                  index === currentStep ? 'bg-game-accent' : 'bg-game-accent/30'
-                }`}
-              />
-            ))}
+        <Card className="w-full bg-game border border-game-accent/30 text-game-foreground p-0 overflow-hidden animate-fade-in">
+          <div className="bg-game-secondary p-4 border-b border-game-accent/30">
+            <h2 className="text-xl font-bold text-game-accent">{currentStepData.title}</h2>
+            <p className="text-sm text-game-foreground/70">{currentStepData.description}</p>
           </div>
           
-          <Button 
-            onClick={handleNext}
-            className="game-button animate-pulse-light"
-          >
-            {currentStep < steps.length - 1 ? (
-              <>
-                Weiter <ArrowRight className="ml-1 h-4 w-4" />
-              </>
-            ) : (
-              <>
-                Starten <Check className="ml-1 h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
-      </Card>
+          <div className="p-6">
+            {currentStepData.content}
+          </div>
+          
+          <div className="flex justify-between items-center border-t border-game-accent/30 p-4 bg-game-secondary/50">
+            <div className="flex space-x-1">
+              {steps.map((_, index) => (
+                <div 
+                  key={index} 
+                  className={`w-2 h-2 rounded-full ${
+                    index === currentStep ? 'bg-game-accent' : 'bg-game-accent/30'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <Button 
+              onClick={handleNext}
+              className="game-button animate-pulse-light"
+            >
+              {currentStep < steps.length - 1 ? (
+                <>
+                  Weiter <ArrowRight className="ml-1 h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Starten <Check className="ml-1 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
