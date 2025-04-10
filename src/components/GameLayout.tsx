@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Shield, Sword, Package, Trophy, User, Activity, Menu, X, Backpack, Settings, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Shield, Sword, Package, Trophy, User, Activity, Menu, X, Backpack, Settings, RefreshCw, AlertTriangle, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,14 @@ const GameLayout: React.FC<GameLayoutProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { playerName, selectedAvatar, resetProgress } = useGameContext();
+  const { 
+    playerName, 
+    selectedAvatar, 
+    resetProgress, 
+    playerStats,
+    updatePlayerStats
+  } = useGameContext();
+  
   const [sidebarOpen, setSidebarOpen] = React.useState(!isMobile);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [confirmResetOpen, setConfirmResetOpen] = React.useState(false);
@@ -37,17 +43,6 @@ const GameLayout: React.FC<GameLayoutProps> = ({
     { id: 'shop', label: 'Shop', icon: Package },
     { id: 'inventory', label: 'Inventar', icon: Backpack },
   ] as const;
-
-  // Mock Benutzerdaten
-  const playerData = {
-    name: playerName,
-    level: 5,
-    health: 0,
-    strength: 12,
-    defense: 8,
-    experience: 0,
-    nextLevel: 5000
-  };
 
   // Toggle sidebar
   const toggleSidebar = () => {
@@ -64,6 +59,51 @@ const GameLayout: React.FC<GameLayoutProps> = ({
       title: "Fortschritt zurückgesetzt",
       description: "Alle deine Spieldaten wurden zurückgesetzt.",
       variant: "destructive",
+    });
+  };
+  
+  // Apply difficulty settings
+  const applyDifficultySetting = (newDifficulty: 'easy' | 'medium' | 'hard') => {
+    setDifficulty(newDifficulty);
+    
+    let strengthMultiplier = 1.0;
+    let defenseMultiplier = 1.0;
+    let healthMultiplier = 1.0;
+    
+    switch (newDifficulty) {
+      case 'easy':
+        strengthMultiplier = 1.2;
+        defenseMultiplier = 1.2;
+        healthMultiplier = 1.2;
+        break;
+      case 'hard':
+        strengthMultiplier = 0.8;
+        defenseMultiplier = 0.8;
+        healthMultiplier = 0.8;
+        break;
+      default:
+        // Medium difficulty, keep multipliers at 1.0
+        break;
+    }
+    
+    // Apply difficulty settings to player stats
+    const newMaxHealth = Math.floor(100 * healthMultiplier);
+    const newStrength = Math.floor(playerStats.strength * strengthMultiplier);
+    const newDefense = Math.floor(playerStats.defense * defenseMultiplier);
+    
+    updatePlayerStats({
+      strength: newStrength,
+      defense: newDefense,
+      maxHealth: newMaxHealth,
+      health: Math.min(playerStats.health, newMaxHealth)
+    });
+    
+    toast({
+      title: "Schwierigkeitsgrad geändert",
+      description: `Schwierigkeitsgrad auf ${
+        newDifficulty === 'easy' ? 'Einfach' : 
+        newDifficulty === 'medium' ? 'Mittel' : 'Schwer'
+      } gesetzt.`,
     });
   };
   
@@ -131,28 +171,37 @@ const GameLayout: React.FC<GameLayoutProps> = ({
               <Settings className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-game-foreground/70 text-sm">Krieger • Level {playerData.level}</p>
+          <p className="text-game-foreground/70 text-sm">Krieger • Level {playerStats.level}</p>
         </div>
         
         {/* Player stats */}
         <div className="space-y-3">
           <div className="game-card">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-game-foreground/70 text-xs">HP</span>
-              <span className="text-game-highlight text-xs">{playerData.health}/100</span>
+              <div className="flex items-center">
+                <Heart className="h-4 w-4 text-red-400 mr-1" />
+                <span className="text-game-foreground/70 text-xs">HP</span>
+              </div>
+              <span className="text-red-400 text-xs">{playerStats.health}/{playerStats.maxHealth}</span>
             </div>
             <div className="w-full bg-game/50 rounded-full h-2">
-              <div className="bg-red-500 h-2 rounded-full" style={{ width: `${playerData.health}%` }}></div>
+              <div 
+                className="bg-red-500 h-2 rounded-full transition-all duration-500" 
+                style={{ width: `${(playerStats.health/playerStats.maxHealth) * 100}%` }}
+              ></div>
             </div>
           </div>
           
           <div className="game-card">
             <div className="flex justify-between items-center mb-1">
               <span className="text-game-foreground/70 text-xs">XP</span>
-              <span className="text-game-highlight text-xs">{playerData.experience}/{playerData.nextLevel}</span>
+              <span className="text-game-highlight text-xs">{playerStats.experience}/{playerStats.nextLevel}</span>
             </div>
             <div className="w-full bg-game/50 rounded-full h-2">
-              <div className="bg-game-accent h-2 rounded-full" style={{ width: `${(playerData.experience/playerData.nextLevel)*100}%` }}></div>
+              <div 
+                className="bg-game-accent h-2 rounded-full" 
+                style={{ width: `${(playerStats.experience/playerStats.nextLevel) * 100}%` }}
+              ></div>
             </div>
           </div>
           
@@ -162,7 +211,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                 <Sword className="h-4 w-4 text-game-accent mr-2" />
                 <span className="text-game-foreground/70">Stärke</span>
               </div>
-              <span className="text-game-highlight">{playerData.strength}</span>
+              <span className="text-game-highlight">{playerStats.strength}</span>
             </div>
             
             <div className="flex items-center justify-between">
@@ -170,7 +219,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                 <Shield className="h-4 w-4 text-game-accent mr-2" />
                 <span className="text-game-foreground/70">Verteidigung</span>
               </div>
-              <span className="text-game-highlight">{playerData.defense}</span>
+              <span className="text-game-highlight">{playerStats.defense}</span>
             </div>
           </div>
         </div>
@@ -204,7 +253,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
           
           <div className="hidden md:flex items-center space-x-2">
             <Activity className="h-5 w-5 text-game-accent" />
-            <span className="text-sm text-game-highlight">Level {playerData.level}</span>
+            <span className="text-sm text-game-highlight">Level {playerStats.level}</span>
           </div>
         </div>
       </header>
@@ -286,7 +335,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
               <select 
                 className="bg-game-secondary border border-game-accent/30 rounded p-1 text-game-foreground"
                 value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as 'easy' | 'medium' | 'hard')}
+                onChange={(e) => applyDifficultySetting(e.target.value as 'easy' | 'medium' | 'hard')}
               >
                 <option value="easy">Einfach</option>
                 <option value="medium">Mittel</option>

@@ -4,15 +4,16 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGameContext } from '@/context/GameContext';
-import { Check, ArrowRight, User, Info, AlertTriangle } from 'lucide-react';
+import { Check, ArrowRight, User, Info, AlertTriangle, Sword, Shield, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const WelcomeSetup: React.FC = () => {
-  const { setPlayerInfo, completeTutorial } = useGameContext();
+  const { setPlayerInfo, completeTutorial, updatePlayerStats } = useGameContext();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [name, setName] = useState<string>("");
   const [avatar, setAvatar] = useState<'player1' | 'player2' | 'player3' | 'monster'>('player1');
   const [nameError, setNameError] = useState<string>("");
+  const [showAvatarAnimation, setShowAvatarAnimation] = useState(false);
   const { toast } = useToast();
   
   const steps = [
@@ -25,7 +26,7 @@ const WelcomeSetup: React.FC = () => {
             <img 
               src="/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png" 
               alt="Player Avatar" 
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain blue-glow"
             />
           </div>
           <p className="text-game-foreground/80">
@@ -64,10 +65,14 @@ const WelcomeSetup: React.FC = () => {
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div 
-                onClick={() => setAvatar('player1')} 
+                onClick={() => {
+                  setAvatar('player1');
+                  setShowAvatarAnimation(true);
+                  setTimeout(() => setShowAvatarAnimation(false), 500);
+                }} 
                 className={`p-2 cursor-pointer rounded-md flex flex-col items-center ${
                   avatar === 'player1' ? 'border-2 border-game-accent' : 'border border-game-accent/20'
-                }`}
+                } ${showAvatarAnimation && avatar === 'player1' ? 'blue-glow' : ''}`}
               >
                 <img 
                   src="/lovable-uploads/62c95b97-15d2-4d66-9bf8-f2556649b4e9.png" 
@@ -77,10 +82,14 @@ const WelcomeSetup: React.FC = () => {
                 <span className="text-xs mt-2">Avatar 1</span>
               </div>
               <div 
-                onClick={() => setAvatar('player2')} 
+                onClick={() => {
+                  setAvatar('player2');
+                  setShowAvatarAnimation(true);
+                  setTimeout(() => setShowAvatarAnimation(false), 500);
+                }} 
                 className={`p-2 cursor-pointer rounded-md flex flex-col items-center ${
                   avatar === 'player2' ? 'border-2 border-game-accent' : 'border border-game-accent/20'
-                }`}
+                } ${showAvatarAnimation && avatar === 'player2' ? 'blue-glow' : ''}`}
               >
                 <img 
                   src="/lovable-uploads/e6bb07f6-039d-4ed3-bece-ad8d405fcea4.png" 
@@ -90,10 +99,14 @@ const WelcomeSetup: React.FC = () => {
                 <span className="text-xs mt-2">Avatar 2</span>
               </div>
               <div 
-                onClick={() => setAvatar('player3')} 
+                onClick={() => {
+                  setAvatar('player3');
+                  setShowAvatarAnimation(true);
+                  setTimeout(() => setShowAvatarAnimation(false), 500);
+                }} 
                 className={`p-2 cursor-pointer rounded-md flex flex-col items-center ${
                   avatar === 'player3' ? 'border-2 border-game-accent' : 'border border-game-accent/20'
-                }`}
+                } ${showAvatarAnimation && avatar === 'player3' ? 'blue-glow' : ''}`}
               >
                 <img 
                   src="/lovable-uploads/78ff7be8-098a-4011-b094-98ab0dc84162.png" 
@@ -103,10 +116,14 @@ const WelcomeSetup: React.FC = () => {
                 <span className="text-xs mt-2">Avatar 3</span>
               </div>
               <div 
-                onClick={() => setAvatar('monster')} 
+                onClick={() => {
+                  setAvatar('monster');
+                  setShowAvatarAnimation(true);
+                  setTimeout(() => setShowAvatarAnimation(false), 500);
+                }} 
                 className={`p-2 cursor-pointer rounded-md flex flex-col items-center ${
                   avatar === 'monster' ? 'border-2 border-game-accent' : 'border border-game-accent/20'
-                }`}
+                } ${showAvatarAnimation && avatar === 'monster' ? 'blue-glow' : ''}`}
               >
                 <img 
                   src="/lovable-uploads/e5758efc-bf3c-4373-87ea-1eed85e18c86.png" 
@@ -115,6 +132,43 @@ const WelcomeSetup: React.FC = () => {
                 />
                 <span className="text-xs mt-2">Monster</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "Deine Attribute",
+      description: "Lerne die wichtigsten Spielstatistiken kennen.",
+      content: (
+        <div className="space-y-4">
+          <div className="game-card flex items-center">
+            <div className="p-2 bg-game/60 rounded-full mr-3">
+              <Heart className="w-8 h-8 text-red-400" />
+            </div>
+            <div>
+              <h4 className="text-game-accent">Gesundheit (HP)</h4>
+              <p className="text-xs text-game-foreground/70">Wenn deine Gesundheit auf 0 sinkt, verlierst du den Kampf.</p>
+            </div>
+          </div>
+          
+          <div className="game-card flex items-center">
+            <div className="p-2 bg-game/60 rounded-full mr-3">
+              <Sword className="w-8 h-8 text-blue-400" />
+            </div>
+            <div>
+              <h4 className="text-game-accent">Stärke (ATK)</h4>
+              <p className="text-xs text-game-foreground/70">Bestimmt, wie viel Schaden du im Kampf verursachst.</p>
+            </div>
+          </div>
+          
+          <div className="game-card flex items-center">
+            <div className="p-2 bg-game/60 rounded-full mr-3">
+              <Shield className="w-8 h-8 text-green-400" />
+            </div>
+            <div>
+              <h4 className="text-game-accent">Verteidigung (DEF)</h4>
+              <p className="text-xs text-game-foreground/70">Reduziert den Schaden, den du von Feinden erhältst.</p>
             </div>
           </div>
         </div>
@@ -191,6 +245,49 @@ const WelcomeSetup: React.FC = () => {
     } else {
       // Save player info and complete tutorial
       setPlayerInfo(name || "Spieler123", avatar);
+      
+      // Initialize player stats based on avatar choice
+      let initialStats = {
+        health: 100,
+        maxHealth: 100,
+        strength: 10,
+        defense: 8,
+        experience: 0,
+        nextLevel: 1000,
+        level: 1
+      };
+      
+      // Different starting stats based on avatar
+      switch(avatar) {
+        case 'player1': // Balanced
+          break;
+        case 'player2': // More attack
+          initialStats = {
+            ...initialStats,
+            strength: 12,
+            defense: 6
+          };
+          break;
+        case 'player3': // More defense
+          initialStats = {
+            ...initialStats,
+            strength: 8,
+            defense: 12
+          };
+          break;
+        case 'monster': // More health
+          initialStats = {
+            ...initialStats,
+            health: 120,
+            maxHealth: 120
+          };
+          break;
+      }
+      
+      // Update player stats
+      updatePlayerStats(initialStats);
+      
+      // Complete tutorial
       completeTutorial();
       
       toast({
@@ -203,8 +300,8 @@ const WelcomeSetup: React.FC = () => {
   const currentStepData = steps[currentStep];
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <Card className="max-w-md w-full bg-game border border-game-accent/30 text-game-foreground p-0 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 bg-moving-dots" style={{animationName: 'moveBackground', animationDuration: '20s', animationIterationCount: 'infinite', animationTimingFunction: 'linear'}}>
+      <Card className="max-w-md w-full bg-game border border-game-accent/30 text-game-foreground p-0 overflow-hidden animate-fade-in">
         <div className="bg-game-secondary p-4 border-b border-game-accent/30">
           <h2 className="text-xl font-bold text-game-accent">{currentStepData.title}</h2>
           <p className="text-sm text-game-foreground/70">{currentStepData.description}</p>
@@ -228,7 +325,7 @@ const WelcomeSetup: React.FC = () => {
           
           <Button 
             onClick={handleNext}
-            className="game-button"
+            className="game-button animate-pulse-light"
           >
             {currentStep < steps.length - 1 ? (
               <>
