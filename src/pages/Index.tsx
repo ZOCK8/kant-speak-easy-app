@@ -10,8 +10,10 @@ import SettingsPanel from '@/components/SettingsPanel';
 import WelcomeSetup from '@/components/WelcomeSetup';
 import { useGameContext } from '@/context/GameContext';
 
+type TabType = 'avatar' | 'quests' | 'game' | 'shop' | 'inventory' | 'settings';
+
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<'avatar' | 'quests' | 'game' | 'shop' | 'inventory' | 'settings'>('avatar');
+  const [activeTab, setActiveTab] = useState<TabType>('avatar');
   const { isFirstTime, showTutorial } = useGameContext();
 
   const renderContent = () => {

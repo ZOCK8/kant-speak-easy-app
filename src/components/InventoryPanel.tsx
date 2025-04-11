@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,7 +61,6 @@ const InventoryPanel: React.FC = () => {
     switch (rarity) {
       case 'common':
         return 'border-gray-400/30';
-      case 'uncommon':
       case 'rare':
         return 'border-green-400/30';
       case 'epic':
@@ -79,7 +77,6 @@ const InventoryPanel: React.FC = () => {
     switch (rarity) {
       case 'common':
         return 'text-gray-200';
-      case 'uncommon':
       case 'rare':
         return 'text-green-400';
       case 'epic':

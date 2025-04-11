@@ -9,6 +9,7 @@ interface InventoryItem {
   name: string;
   type: 'weapon' | 'armor' | 'potion' | 'accessory';
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  equipped?: boolean;
   stats: {
     attack?: number;
     defense?: number;
