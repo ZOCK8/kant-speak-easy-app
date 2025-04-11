@@ -1,63 +1,223 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Sword, PlusCircle, Info, Trash2, Heart, Filter } from 'lucide-react';
+import { Shield, Sword, PlusCircle, Trash2, Sparkles } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useGameContext } from '@/context/GameContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+
+type ItemDetailsProps = {
+  item: {
+    id: number;
+    name: string;
+    type: 'weapon' | 'armor' | 'potion' | 'accessory';
+    rarity: 'common' | 'rare' | 'epic' | 'legendary';
+    equipped?: boolean;
+    stats: {
+      attack?: number;
+      defense?: number;
+      health?: number;
+    };
+  };
+  isOpen: boolean;
+  onClose: () => void;
+  onEquip: () => void;
+  onUnequip: () => void;
+  onDelete: () => void;
+};
+
+const ItemDetails: React.FC<ItemDetailsProps> = ({
+  item,
+  isOpen,
+  onClose,
+  onEquip,
+  onUnequip,
+  onDelete,
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground">
+        <DialogHeader>
+          <DialogTitle className={`flex items-center ${getRarityTextColor(item.rarity)}`}>
+            {getTypeIcon(item.type)}
+            <span className="ml-2">{item.name}</span>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex items-center">
+            <span className="text-game-foreground/70 mr-2">Seltenheit:</span>
+            <span className={getRarityTextColor(item.rarity)}>
+              {item.rarity === 'common' && 'Gewöhnlich'}
+              {item.rarity === 'rare' && 'Selten'}
+              {item.rarity === 'epic' && 'Episch'}
+              {item.rarity === 'legendary' && 'Legendär'}
+            </span>
+          </div>
+          
+          <div className="flex items-center">
+            <span className="text-game-foreground/70 mr-2">Typ:</span>
+            <span className="text-game-foreground">
+              {item.type === 'weapon' && 'Waffe'}
+              {item.type === 'armor' && 'Rüstung'}
+              {item.type === 'potion' && 'Trank'}
+              {item.type === 'accessory' && 'Zubehör'}
+            </span>
+          </div>
+          
+          <div className="pt-2 border-t border-game-accent/20">
+            <h4 className="text-game-accent mb-2">Statistiken</h4>
+            <div className="space-y-2">
+              {item.stats.attack !== undefined && (
+                <div className="flex items-center">
+                  <Sword className="h-4 w-4 mr-2 text-red-400" />
+                  <span className="text-game-foreground/70">Angriff:</span>
+                  <span className="ml-auto text-red-400">+{item.stats.attack}</span>
+                </div>
+              )}
+              {item.stats.defense !== undefined && (
+                <div className="flex items-center">
+                  <Shield className="h-4 w-4 mr-2 text-blue-400" />
+                  <span className="text-game-foreground/70">Verteidigung:</span>
+                  <span className="ml-auto text-blue-400">+{item.stats.defense}</span>
+                </div>
+              )}
+              {item.stats.health !== undefined && (
+                <div className="flex items-center">
+                  <PlusCircle className="h-4 w-4 mr-2 text-green-400" />
+                  <span className="text-game-foreground/70">Leben:</span>
+                  <span className="ml-auto text-green-400">+{item.stats.health}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <DialogFooter className="flex flex-row justify-between gap-2">
+          <Button
+            variant="outline"
+            className="text-red-500 border-red-500/30 hover:bg-red-500/10"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-4 w-4 mr-0 sm:mr-2" />
+            <span className="hidden sm:inline">Entfernen</span>
+          </Button>
+          
+          {!item.equipped ? (
+            <Button
+              className="bg-game-accent hover:bg-game-accent/80"
+              onClick={onEquip}
+            >
+              <span className="text-white">Ausrüsten</span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="border-game-accent/30"
+              onClick={onUnequip}
+            >
+              <span className="text-white">Ablegen</span>
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const InventoryPanel: React.FC = () => {
   const { inventory, addInventoryItem, removeInventoryItem } = useGameContext();
   const { toast } = useToast();
-  const [selectedItem, setSelectedItem] = useState<(typeof inventory)[0] | null>(null);
-  const [showItemDetails, setShowItemDetails] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'rarity' | 'type'>('name');
   const [filterType, setFilterType] = useState<'all' | 'weapon' | 'armor' | 'potion' | 'accessory'>('all');
   
-  // Toggle equip/unequip items
-  const toggleEquip = (id: number) => {
-    const item = inventory.find(item => item.id === id);
-    if (!item) return;
-
-    // Create a deep copy of the inventory
-    const newInventory = JSON.parse(JSON.stringify(inventory));
+  const selectedItemDetails = inventory.find(item => item.id === selectedItem);
+  
+  const openItemDetails = (id: number) => {
+    setSelectedItem(id);
+    setDetailsOpen(true);
+  };
+  
+  const closeItemDetails = () => {
+    setDetailsOpen(false);
+    setSelectedItem(null);
+  };
+  
+  const equipItem = () => {
+    if (!selectedItem) return;
     
-    // Find item to toggle
-    const toggleItem = newInventory.find((i: typeof item) => i.id === id);
-    if (!toggleItem) return;
-    
-    // If equipping, unequip other items of the same type
-    if (!toggleItem.equipped) {
-      newInventory.forEach((i: typeof item) => {
-        if (i.type === toggleItem.type && i.equipped) {
-          i.equipped = false;
-        }
-      });
-    }
-    
-    // Toggle this item
-    toggleItem.equipped = !toggleItem.equipped;
-    
-    // Update local state and game context
-    newInventory.forEach((item: typeof toggleItem) => {
-      addInventoryItem(item);
+    const updatedInventory = inventory.map(item => {
+      if (item.id === selectedItem) {
+        return { ...item, equipped: true };
+      }
+      
+      if (selectedItemDetails && item.type === selectedItemDetails.type && item.id !== selectedItem) {
+        return { ...item, equipped: false };
+      }
+      
+      return item;
     });
     
     toast({
-      description: toggleItem.equipped 
-        ? `${toggleItem.name} ausgerüstet.` 
-        : `${toggleItem.name} abgelegt.`,
+      description: `${selectedItemDetails?.name} ausgerüstet.`,
       variant: "default",
     });
-  };
-
-  // Show item details
-  const showDetails = (item: (typeof inventory)[0]) => {
-    setSelectedItem(item);
-    setShowItemDetails(true);
+    
+    closeItemDetails();
   };
   
-  // Get background color based on rarity
-  const getRarityColor = (rarity: string) => {
+  const unequipItem = () => {
+    if (!selectedItem) return;
+    
+    const updatedInventory = inventory.map(item => {
+      if (item.id === selectedItem) {
+        return { ...item, equipped: false };
+      }
+      return item;
+    });
+    
+    toast({
+      description: `${selectedItemDetails?.name} abgelegt.`,
+      variant: "default",
+    });
+    
+    closeItemDetails();
+  };
+  
+  const deleteItem = () => {
+    if (!selectedItem) return;
+    
+    removeInventoryItem(selectedItem);
+    
+    toast({
+      description: `${selectedItemDetails?.name} entfernt.`,
+      variant: "default",
+    });
+    
+    closeItemDetails();
+  };
+  
+  const sortItems = (a: typeof inventory[0], b: typeof inventory[0]) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'rarity':
+        const rarityOrder = { common: 0, rare: 1, epic: 2, legendary: 3 };
+        return rarityOrder[a.rarity] - rarityOrder[b.rarity];
+      case 'type':
+        return a.type.localeCompare(b.type);
+      default:
+        return 0;
+    }
+  };
+  
+  const filteredItems = filterType === 'all' 
+    ? inventory 
+    : inventory.filter(item => item.type === filterType);
+  
+  const getRarityBorderColor = (rarity: 'common' | 'rare' | 'epic' | 'legendary') => {
     switch (rarity) {
       case 'common':
         return 'border-gray-400/30';
@@ -66,14 +226,13 @@ const InventoryPanel: React.FC = () => {
       case 'epic':
         return 'border-purple-400/30';
       case 'legendary':
-        return 'border-yellow-400/30 blue-glow';
+        return 'border-yellow-400/30';
       default:
         return 'border-gray-400/30';
     }
   };
   
-  // Get text color based on rarity
-  const getRarityTextColor = (rarity: string) => {
+  const getRarityTextColor = (rarity: 'common' | 'rare' | 'epic' | 'legendary') => {
     switch (rarity) {
       case 'common':
         return 'text-gray-200';
@@ -87,333 +246,164 @@ const InventoryPanel: React.FC = () => {
         return 'text-gray-200';
     }
   };
-
-  // Get item icon
-  const getItemIcon = (item: (typeof inventory)[0]) => {
-    switch (item.type) {
+  
+  const getTypeIcon = (type: 'weapon' | 'armor' | 'potion' | 'accessory') => {
+    switch (type) {
       case 'weapon':
-        return '⚔️';
+        return <Sword className="h-4 w-4 text-red-400" />;
       case 'armor':
-        return '🛡️';
+        return <Shield className="h-4 w-4 text-blue-400" />;
       case 'potion':
-        return '🧪';
+        return <PlusCircle className="h-4 w-4 text-green-400" />;
       case 'accessory':
-        return '💍';
+        return <Sparkles className="h-4 w-4 text-yellow-400" />;
       default:
-        return '📦';
+        return null;
     }
   };
-  
-  // Filter items
-  const filteredInventory = inventory.filter(item => {
-    if (filterType === 'all') return true;
-    return item.type === filterType;
-  });
-  
-  // Filter equipped items
-  const equippedItems = filteredInventory.filter(item => item.equipped);
-  // Filter inventory items (not equipped)
-  const inventoryItems = filteredInventory.filter(item => !item.equipped);
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-game-accent mb-2">Inventar</h2>
-        <p className="text-game-foreground/70">Verwalte und rüste deine Gegenstände aus</p>
+        <p className="text-game-foreground/70">Verwalte deine Gegenstände</p>
       </div>
       
-      {/* Filter bar */}
-      <div className="flex justify-center mb-4">
-        <div className="bg-game-secondary border border-game-accent/30 rounded-md p-1 flex space-x-1">
-          <Button
-            size="sm"
-            variant={filterType === 'all' ? 'default' : 'outline'}
-            className={filterType === 'all' ? 'bg-game-accent' : 'text-white border-game-accent/20'}
-            onClick={() => setFilterType('all')}
-          >
-            <Filter className="h-4 w-4 mr-1" />
-            <span className="text-white">Alle</span>
-          </Button>
-          <Button
-            size="sm"
-            variant={filterType === 'weapon' ? 'default' : 'outline'}
-            className={filterType === 'weapon' ? 'bg-game-accent' : 'text-white border-game-accent/20'}
-            onClick={() => setFilterType('weapon')}
-          >
-            <span className="text-white">⚔️ Waffen</span>
-          </Button>
-          <Button
-            size="sm"
-            variant={filterType === 'armor' ? 'default' : 'outline'}
-            className={filterType === 'armor' ? 'bg-game-accent' : 'text-white border-game-accent/20'}
-            onClick={() => setFilterType('armor')}
-          >
-            <span className="text-white">🛡️ Rüstung</span>
-          </Button>
-          <Button
-            size="sm"
-            variant={filterType === 'potion' ? 'default' : 'outline'}
-            className={filterType === 'potion' ? 'bg-game-accent' : 'text-white border-game-accent/20'}
-            onClick={() => setFilterType('potion')}
-          >
-            <span className="text-white">🧪 Tränke</span>
-          </Button>
-          <Button
-            size="sm"
-            variant={filterType === 'accessory' ? 'default' : 'outline'}
-            className={filterType === 'accessory' ? 'bg-game-accent' : 'text-white border-game-accent/20'}
-            onClick={() => setFilterType('accessory')}
-          >
-            <span className="text-white">💍 Zubehör</span>
-          </Button>
-        </div>
-      </div>
-      
-      {/* Equipped items section */}
-      <div>
-        <h3 className="text-lg text-game-accent mb-3 flex items-center">
-          <Shield className="mr-2 h-5 w-5" /> Ausgerüstete Gegenstände
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {equippedItems.map(item => (
-            <Card 
-              key={item.id} 
-              className={`game-card flex items-start p-3 ${getRarityColor(item.rarity)}`}
+      <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+        <div className="game-card w-full sm:w-auto">
+          <h3 className="text-sm text-game-accent mb-2">Sortieren nach</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={sortBy === 'name' ? 'default' : 'outline'}
+              className={sortBy === 'name' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setSortBy('name')}
+              size="sm"
             >
-              <div className="text-4xl mr-3 opacity-80">{getItemIcon(item)}</div>
-              <div className="flex-grow">
-                <div className="flex justify-between">
-                  <h4 className={`font-medium ${getRarityTextColor(item.rarity)}`}>{item.name}</h4>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0 text-game-accent"
-                      onClick={() => showDetails(item)}
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0 text-game-foreground/70"
-                      onClick={() => toggleEquip(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-game-foreground/70 mb-2">{item.type} • {item.rarity}</p>
-                <div className="flex flex-wrap gap-1">
-                  {item.stats?.attack && (
-                    <div className="flex items-center mr-3 text-xs bg-game/30 px-1 py-0.5 rounded">
-                      <Sword className="h-3 w-3 mr-1 text-red-400" />
-                      <span>+{item.stats.attack}</span>
-                    </div>
-                  )}
-                  {item.stats?.defense && (
-                    <div className="flex items-center mr-3 text-xs bg-game/30 px-1 py-0.5 rounded">
-                      <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                      <span>+{item.stats.defense}</span>
-                    </div>
-                  )}
-                  {item.stats?.health && (
-                    <div className="flex items-center mr-3 text-xs bg-game/30 px-1 py-0.5 rounded">
-                      <Heart className="h-3 w-3 mr-1 text-green-400" />
-                      <span>+{item.stats.health}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
-          
-          {equippedItems.length === 0 && (
-            <div className="col-span-full text-center py-6 text-game-foreground/50">
-              <p>Keine Gegenstände ausgerüstet</p>
-            </div>
-          )}
+              Name
+            </Button>
+            <Button 
+              variant={sortBy === 'rarity' ? 'default' : 'outline'}
+              className={sortBy === 'rarity' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setSortBy('rarity')}
+              size="sm"
+            >
+              Seltenheit
+            </Button>
+            <Button 
+              variant={sortBy === 'type' ? 'default' : 'outline'}
+              className={sortBy === 'type' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setSortBy('type')}
+              size="sm"
+            >
+              Typ
+            </Button>
+          </div>
+        </div>
+        
+        <div className="game-card w-full sm:w-auto">
+          <h3 className="text-sm text-game-accent mb-2">Filtern nach Typ</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={filterType === 'all' ? 'default' : 'outline'}
+              className={filterType === 'all' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setFilterType('all')}
+              size="sm"
+            >
+              Alle
+            </Button>
+            <Button 
+              variant={filterType === 'weapon' ? 'default' : 'outline'}
+              className={filterType === 'weapon' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setFilterType('weapon')}
+              size="sm"
+            >
+              Waffen
+            </Button>
+            <Button 
+              variant={filterType === 'armor' ? 'default' : 'outline'}
+              className={filterType === 'armor' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setFilterType('armor')}
+              size="sm"
+            >
+              Rüstung
+            </Button>
+            <Button 
+              variant={filterType === 'potion' ? 'default' : 'outline'}
+              className={filterType === 'potion' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setFilterType('potion')}
+              size="sm"
+            >
+              Tränke
+            </Button>
+            <Button 
+              variant={filterType === 'accessory' ? 'default' : 'outline'}
+              className={filterType === 'accessory' ? 'bg-game-accent text-white text-xs' : 'border-game-accent/30 text-white text-xs'}
+              onClick={() => setFilterType('accessory')}
+              size="sm"
+            >
+              Zubehör
+            </Button>
+          </div>
         </div>
       </div>
       
-      {/* Inventory items */}
-      <div>
-        <h3 className="text-lg text-game-accent mb-3 flex items-center">
-          <PlusCircle className="mr-2 h-5 w-5" /> Inventar
-          <span className="ml-2 text-sm text-game-foreground/50">({inventoryItems.length} Gegenstände)</span>
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {inventoryItems.map(item => (
-            <Card 
-              key={item.id} 
-              className={`game-card flex items-start p-3 ${getRarityColor(item.rarity)}`}
-            >
-              <div className="text-4xl mr-3 opacity-80">{getItemIcon(item)}</div>
-              <div className="flex-grow">
-                <div className="flex justify-between">
-                  <h4 className={`font-medium ${getRarityTextColor(item.rarity)}`}>{item.name}</h4>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0 text-game-accent"
-                      onClick={() => showDetails(item)}
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0 text-game-accent"
-                      onClick={() => toggleEquip(item.id)}
-                    >
-                      <PlusCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-game-foreground/70 mb-2">{item.type} • {item.rarity}</p>
-                <div className="flex flex-wrap gap-1">
-                  {item.stats?.attack && (
-                    <div className="flex items-center mr-3 text-xs bg-game/30 px-1 py-0.5 rounded">
-                      <Sword className="h-3 w-3 mr-1 text-red-400" />
-                      <span>+{item.stats.attack}</span>
-                    </div>
-                  )}
-                  {item.stats?.defense && (
-                    <div className="flex items-center mr-3 text-xs bg-game/30 px-1 py-0.5 rounded">
-                      <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                      <span>+{item.stats.defense}</span>
-                    </div>
-                  )}
-                  {item.stats?.health && (
-                    <div className="flex items-center mr-3 text-xs bg-game/30 px-1 py-0.5 rounded">
-                      <Heart className="h-3 w-3 mr-1 text-green-400" />
-                      <span>+{item.stats.health}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
-          
-          {inventoryItems.length === 0 && (
-            <div className="col-span-full text-center py-6 text-game-foreground/50">
-              <p>Dein Inventar ist leer</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {filteredItems.sort(sortItems).map(item => (
+          <Card 
+            key={item.id}
+            className={`game-card p-3 cursor-pointer relative ${getRarityBorderColor(item.rarity)} hover:border-game-accent/50 transition-colors`}
+            onClick={() => openItemDetails(item.id)}
+          >
+            {item.equipped && (
+              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs py-1 px-2 rounded-full">
+                Aktiv
+              </span>
+            )}
+            <div className="flex justify-between items-start mb-2">
+              <span className={`text-sm font-medium ${getRarityTextColor(item.rarity)}`}>{item.name}</span>
+              <span className="bg-game/50 p-1 rounded-full">{getTypeIcon(item.type)}</span>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Item Details Dialog */}
-      <Dialog open={showItemDetails} onOpenChange={setShowItemDetails}>
-        {selectedItem && (
-          <DialogContent className="bg-game-secondary border-game-accent/40 text-game-foreground">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <span className="text-2xl">{getItemIcon(selectedItem)}</span>
-                <span className={getRarityTextColor(selectedItem.rarity)}>
-                  {selectedItem.name}
-                </span>
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className={`p-3 border rounded-md ${getRarityColor(selectedItem.rarity)}`}>
-                <h4 className="text-game-accent mb-2">Gegenstand Info:</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-game-foreground/70">Typ:</span>
-                    <span>{selectedItem.type === 'weapon' ? 'Waffe' : 
-                           selectedItem.type === 'armor' ? 'Rüstung' : 
-                           selectedItem.type === 'potion' ? 'Trank' : 'Zubehör'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-game-foreground/70">Seltenheit:</span>
-                    <span className={getRarityTextColor(selectedItem.rarity)}>
-                      {selectedItem.rarity === 'common' ? 'Gewöhnlich' : 
-                       selectedItem.rarity === 'uncommon' ? 'Ungewöhnlich' :
-                       selectedItem.rarity === 'rare' ? 'Selten' :
-                       selectedItem.rarity === 'epic' ? 'Episch' : 'Legendär'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-game-foreground/70">Status:</span>
-                    <span>{selectedItem.equipped ? 'Ausgerüstet' : 'Im Inventar'}</span>
-                  </div>
+            <div className="space-y-1 text-xs text-game-foreground/70">
+              {item.stats.attack && (
+                <div className="flex items-center">
+                  <Sword className="h-3 w-3 mr-1 text-red-400" />
+                  <span>Angriff: +{item.stats.attack}</span>
                 </div>
-              </div>
-
-              <div className="p-3 border border-game-accent/20 rounded-md">
-                <h4 className="text-game-accent mb-2">Attributboni:</h4>
-                <div className="space-y-2">
-                  {selectedItem.stats?.attack && (
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Sword className="h-4 w-4 text-red-400 mr-2" />
-                        <span>Angriff</span>
-                      </div>
-                      <span className="text-green-400">+{selectedItem.stats.attack}</span>
-                    </div>
-                  )}
-                  {selectedItem.stats?.defense && (
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Shield className="h-4 w-4 text-blue-400 mr-2" />
-                        <span>Verteidigung</span>
-                      </div>
-                      <span className="text-green-400">+{selectedItem.stats.defense}</span>
-                    </div>
-                  )}
-                  {selectedItem.stats?.health && (
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Heart className="h-4 w-4 text-green-400 mr-2" />
-                        <span>Lebenspunkte</span>
-                      </div>
-                      <span className="text-green-400">+{selectedItem.stats.health}</span>
-                    </div>
-                  )}
-                  {!selectedItem.stats?.attack && !selectedItem.stats?.defense && !selectedItem.stats?.health && (
-                    <p className="text-game-foreground/50 text-center">Keine Attribute</p>
-                  )}
+              )}
+              {item.stats.defense && (
+                <div className="flex items-center">
+                  <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                  <span>Verteidigung: +{item.stats.defense}</span>
                 </div>
-              </div>
-
-              <div className="flex justify-around gap-3">
-                <Button
-                  className={selectedItem.equipped ? "bg-red-600 hover:bg-red-700" : "bg-game-accent hover:bg-game-accent/90"}
-                  onClick={() => {
-                    toggleEquip(selectedItem.id);
-                    setShowItemDetails(false);
-                  }}
-                >
-                  <span className="text-white">
-                    {selectedItem.equipped ? "Ablegen" : "Ausrüsten"}
-                  </span>
-                </Button>
-                
-                {!selectedItem.equipped && (
-                  <Button
-                    variant="outline"
-                    className="border-red-500/50 text-red-500 hover:bg-red-500/10"
-                    onClick={() => {
-                      removeInventoryItem(selectedItem.id);
-                      setShowItemDetails(false);
-                      toast({
-                        description: `${selectedItem.name} wurde aus dem Inventar entfernt.`,
-                        variant: "default",
-                      });
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    <span>Entfernen</span>
-                  </Button>
-                )}
-              </div>
+              )}
+              {item.stats.health && (
+                <div className="flex items-center">
+                  <PlusCircle className="h-3 w-3 mr-1 text-green-400" />
+                  <span>Leben: +{item.stats.health}</span>
+                </div>
+              )}
             </div>
-          </DialogContent>
+          </Card>
+        ))}
+        
+        {filteredItems.length === 0 && (
+          <div className="col-span-full text-center py-8 text-game-foreground/50">
+            <p>Keine Gegenstände gefunden.</p>
+            <p className="text-sm mt-2">Verdiene Gegenstände durch Quests oder kaufe sie im Shop.</p>
+          </div>
         )}
-      </Dialog>
+      </div>
+      
+      {selectedItemDetails && (
+        <ItemDetails
+          item={selectedItemDetails}
+          isOpen={detailsOpen}
+          onClose={closeItemDetails}
+          onEquip={equipItem}
+          onUnequip={unequipItem}
+          onDelete={deleteItem}
+        />
+      )}
     </div>
   );
 };

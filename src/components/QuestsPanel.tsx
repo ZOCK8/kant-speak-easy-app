@@ -6,9 +6,11 @@ import { Trophy, Clock, Check, AlertTriangle, Coins, Shield, RotateCcw } from 'l
 import { useToast } from '@/hooks/use-toast';
 import QuestEditor from './QuestEditor';
 import RewardPanel from './RewardPanel';
+import { useGameContext } from '@/context/GameContext';
 
 const QuestsPanel: React.FC = () => {
   const { toast } = useToast();
+  const { playerStats } = useGameContext();
   
   // Quest editor state
   const [editingQuest, setEditingQuest] = useState<number | null>(null);
@@ -22,6 +24,15 @@ const QuestsPanel: React.FC = () => {
   
   // Next quest reset time
   const [nextResetTime, setNextResetTime] = useState<Date>(new Date());
+  
+  // Dev mode state - use localStorage to check
+  const [devMode, setDevMode] = useState(false);
+  
+  // Check for developer mode on component mount
+  useEffect(() => {
+    const isDevMode = localStorage.getItem('devMode') === 'true';
+    setDevMode(isDevMode);
+  }, []);
   
   // Get difficulty multiplier
   const getDifficultyMultiplier = () => {
@@ -395,34 +406,34 @@ const QuestsPanel: React.FC = () => {
         <p className="text-game-foreground/70">Schließe Übungen ab, um Belohnungen zu erhalten</p>
       </div>
       
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-stretch mb-4 gap-4">
         {/* Difficulty selector */}
-        <div className="game-card p-3 flex-1 mr-4">
+        <div className="game-card p-3 flex-1">
           <h3 className="text-game-accent mb-2 text-sm">Schwierigkeitsgrad</h3>
           <div className="flex flex-wrap gap-2">
             <Button 
               variant={difficultyLevel === 'easy' ? 'default' : 'outline'}
-              className={difficultyLevel === 'easy' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'}
+              className={`${difficultyLevel === 'easy' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'} text-xs sm:text-sm`}
               onClick={() => changeDifficulty('easy')}
               size="sm"
             >
-              <span className="text-white">Einfach</span>
+              Einfach
             </Button>
             <Button 
               variant={difficultyLevel === 'medium' ? 'default' : 'outline'}
-              className={difficultyLevel === 'medium' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'}
+              className={`${difficultyLevel === 'medium' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'} text-xs sm:text-sm`}
               onClick={() => changeDifficulty('medium')}
               size="sm"
             >
-              <span className="text-white">Mittel</span>
+              Mittel
             </Button>
             <Button 
               variant={difficultyLevel === 'hard' ? 'default' : 'outline'}
-              className={difficultyLevel === 'hard' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'}
+              className={`${difficultyLevel === 'hard' ? 'bg-game-accent text-white' : 'border-game-accent/30 text-white'} text-xs sm:text-sm`}
               onClick={() => changeDifficulty('hard')}
               size="sm"
             >
-              <span className="text-white">Schwer</span>
+              Schwer
             </Button>
           </div>
         </div>
@@ -437,15 +448,18 @@ const QuestsPanel: React.FC = () => {
                 <span className="text-game-highlight">{formatTimeUntilReset()}</span>
               </div>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-white border-game-foreground/20"
-              onClick={manualReset}
-            >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              <span className="text-white">Reset</span>
-            </Button>
+            {/* Only show reset button in dev mode */}
+            {devMode && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-white border-game-foreground/20"
+                onClick={manualReset}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Reset</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -44,7 +44,7 @@ const Index = () => {
     <>
       {(isFirstTime || showTutorial) && <WelcomeSetup />}
       
-      <GameLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+      <GameLayout activeTab={activeTab} setActiveTab={(tab) => setActiveTab(tab as TabType)}>
         <div className="animate-fade-in">
           {renderContent()}
         </div>

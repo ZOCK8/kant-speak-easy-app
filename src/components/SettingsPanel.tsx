@@ -37,6 +37,14 @@ const SettingsPanel: React.FC = () => {
   const [devCurrentTime, setDevCurrentTime] = useState(new Date());
   const [devTimeFactor, setDevTimeFactor] = useState(1);
   
+  // Check if developer mode is already activated on mount
+  useEffect(() => {
+    const storedDevMode = localStorage.getItem('devMode');
+    if (storedDevMode === 'true') {
+      setDevMode(true);
+    }
+  }, []);
+  
   // Sound toggle
   const toggleSound = () => {
     setSoundEnabled(!soundEnabled);
@@ -70,6 +78,7 @@ const SettingsPanel: React.FC = () => {
   const checkDevCode = () => {
     if (devCode.toLowerCase() === 'zocki') {
       setDevMode(true);
+      localStorage.setItem('devMode', 'true');
       setShowDevPanel(true);
       setDevCode('');
       
@@ -143,6 +152,18 @@ const SettingsPanel: React.FC = () => {
     
     toast({
       description: `Simulationsgeschwindigkeit auf ${factor}x gesetzt.`,
+      variant: "default",
+    });
+  };
+
+  // Disable developer mode
+  const disableDevMode = () => {
+    setDevMode(false);
+    localStorage.removeItem('devMode');
+    setShowDevPanel(false);
+    
+    toast({
+      description: "Entwicklermodus deaktiviert.",
       variant: "default",
     });
   };
@@ -479,15 +500,7 @@ const SettingsPanel: React.FC = () => {
               <Button
                 variant="outline"
                 className="text-red-500 border-red-500/30 hover:bg-red-500/10"
-                onClick={() => {
-                  setDevMode(false);
-                  setShowDevPanel(false);
-                  
-                  toast({
-                    description: "Entwicklermodus deaktiviert.",
-                    variant: "default",
-                  });
-                }}
+                onClick={disableDevMode}
               >
                 <Terminal className="h-4 w-4 mr-2" />
                 Dev-Modus verlassen

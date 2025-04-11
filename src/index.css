@@ -36,11 +36,12 @@
  
     --radius: 0.5rem;
     
-    --game: 235 21% 10%;
+    /* Modern game UI colors - no gray/black theme */
+    --game: 240 50% 18%;
     --game-foreground: 210 40% 98%;
-    --game-secondary: 235 24% 15%;
-    --game-accent: 208 90% 65%;
-    --game-highlight: 208 90% 65%;
+    --game-secondary: 240 45% 25%;
+    --game-accent: 250 80% 65%;
+    --game-highlight: 210 90% 65%;
   }
  
   .dark {
@@ -113,14 +114,16 @@
   border-color: hsl(var(--game-accent));
 }
 
-/* Game Card Component */
+/* Game Card Component - updated for more modern look */
 .game-card {
-  @apply bg-game-secondary/50 border border-game-accent/20 rounded-md p-3;
+  @apply bg-game-secondary/50 border border-game-accent/20 rounded-md p-3 backdrop-blur-sm;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Game Button Component */
+/* Game Button Component - updated for more modern look */
 .game-button {
   @apply bg-game-accent hover:bg-game-accent/80 text-white font-medium rounded-md transition-colors;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Moving Background Dots */
@@ -355,4 +358,16 @@
   border-radius: 4px;
   font-size: 12px;
   z-index: 100;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .game-card {
+    padding: 0.75rem;
+  }
+  
+  .tutorial-content {
+    padding: 1rem;
+    width: 95%;
+  }
 }
